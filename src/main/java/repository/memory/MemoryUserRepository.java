@@ -2,11 +2,13 @@ package repository.memory;
 
 import entity.Role;
 import entity.User;
+import exception.NotFoundException;
 import repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Класс MemoryUserRepository представляет реализацию интерфейса UserRepository
@@ -24,9 +26,6 @@ public class MemoryUserRepository implements UserRepository {
         return INSTANCE;
     }
 
-    public static void resetInstance() {
-        INSTANCE = new MemoryUserRepository();
-    }
 
     {
         User admin = new User("admin", "admin");
@@ -41,9 +40,8 @@ public class MemoryUserRepository implements UserRepository {
      * @return Найденный пользователь или null, если пользователь не найден
      */
     @Override
-    public User findByUsername(String username) {
-        return users.stream().filter(u -> u.getUsername().equals(username)).findFirst()
-                .orElse(null);
+    public Optional<User> findByUsername(String username) {
+        return users.stream().filter(u -> u.getUsername().equals(username)).findFirst();
     }
 
     /**
@@ -71,9 +69,8 @@ public class MemoryUserRepository implements UserRepository {
      * @return Найденный пользователь или null, если пользователь не найден
      */
     @Override
-    public User findById(Long id) {
-        return users.stream().filter(u -> Objects.equals(u.getId(), id)).findAny()
-                .orElse(null);
+    public Optional<User> findById(Long id) {
+        return users.stream().filter(u -> Objects.equals(u.getId(), id)).findFirst();
     }
 
     /**
@@ -85,11 +82,15 @@ public class MemoryUserRepository implements UserRepository {
      */
     @Override
     public User update(Long id, User updatedUser) {
-        User user = findById(id);
-        updatedUser.setId(id);
-        updatedUser.setMeterReadings(user.getMeterReadings());
-        int index = users.indexOf(user);
-        users.set(index, updatedUser);
-        return updatedUser;
+        Optional<User> user = findById(id);
+        if (user.isPresent()) {
+            updatedUser.setId(user.get().getId());
+            updatedUser.setMeterReadings(user.get().getMeterReadings());
+            int index = users.indexOf(user.get());
+            users.set(index, updatedUser);
+            return updatedUser;
+        } else {
+            throw new NotFoundException(String.format("Пользователь с id: %s не найден", id));
+        }
     }
 }

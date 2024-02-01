@@ -1,11 +1,13 @@
 package repository.memory;
 
 import entity.User;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import repository.UserRepository;
 
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static util.TestData.USER1;
 import static util.TestData.USER2;
 
@@ -20,17 +22,16 @@ class MemoryUserRepositoryTest {
     @Test
     void saveAndGetByUsernameTest() {
         User saveUser = userRepository.save(USER1);
-        var user = userRepository.findByUsername(USER1.getUsername());
+        Optional<User> user = userRepository.findByUsername(USER1.getUsername());
 
-        Assertions.assertThat(user).isNotNull();
-        Assertions.assertThat(user).isEqualTo(saveUser);
+        assertThat(user).isNotNull();
+        user.ifPresent(u -> assertThat(u).isEqualTo(saveUser));
     }
 
     @Test
     void findByUsernameNonExistentTest() {
-        User retrievedUser = userRepository.findByUsername("n");
-
-        Assertions.assertThat(retrievedUser).isNull();
+        Optional<User> retrievedUser = userRepository.findByUsername("n");
+        assertThat(retrievedUser).isEmpty();
     }
 
     @Test
@@ -40,24 +41,26 @@ class MemoryUserRepositoryTest {
         newUser.setId(user.getId());
 
         User updatedUser = userRepository.save(newUser);
-        User retrievedUser = userRepository.findByUsername(USER2.getUsername());
+        Optional<User> retrievedUser = userRepository.findByUsername(USER2.getUsername());
 
-        Assertions.assertThat(retrievedUser).isEqualTo(updatedUser);
-        Assertions.assertThat(retrievedUser.getId()).isEqualTo(updatedUser.getId());
+        retrievedUser.ifPresent(u -> {
+            assertThat(u).isEqualTo(updatedUser);
+            assertThat(u.getId()).isEqualTo(updatedUser.getId());
+        });
     }
 
     @Test
     void findByIdTest() {
         User user = userRepository.save(USER1);
-        User retrievedUser = userRepository.findById(user.getId());
+        Optional<User> retrievedUser = userRepository.findById(user.getId());
 
-        Assertions.assertThat(retrievedUser).isEqualTo(user);
+        retrievedUser.ifPresent(u -> assertThat(u).isEqualTo(user));
     }
 
     @Test
     void findByIdNonExistentTest() {
-        User retrievedUser = userRepository.findById(123L);
+        Optional<User> retrievedUser = userRepository.findById(123L);
 
-        Assertions.assertThat(retrievedUser).isNull();
+        assertThat(retrievedUser).isEmpty();
     }
 }

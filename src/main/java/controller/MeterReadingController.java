@@ -11,10 +11,11 @@ import java.util.Collections;
 import java.util.List;
 
 public class MeterReadingController {
-    private final MeterReadingService meterReadingService = MeterReadingService.getInstance();
+    private final MeterReadingService meterReadingService;
     private static final MeterReadingController INSTANCE = new MeterReadingController();
 
     private MeterReadingController() {
+        this.meterReadingService = MeterReadingService.getInstance();
     }
 
     public static MeterReadingController getInstance() {

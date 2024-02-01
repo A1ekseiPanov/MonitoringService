@@ -9,18 +9,16 @@ import repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class MemoryMeterReadingRepository implements MeterReadingRepository {
     private Long id = 0L;
-    private static MemoryMeterReadingRepository INSTANCE = new MemoryMeterReadingRepository();
-    private final UserRepository userRepository = MemoryUserRepository.getInstance();
+    private final UserRepository userRepository;
     private List<MeterReading> meterReadingList = new ArrayList<>();
+    private static MemoryMeterReadingRepository INSTANCE = new MemoryMeterReadingRepository();
 
     private MemoryMeterReadingRepository() {
-    }
-
-    public static void resetInstance() {
-        INSTANCE = new MemoryMeterReadingRepository();
+        this.userRepository = MemoryUserRepository.getInstance();
     }
 
     public static MemoryMeterReadingRepository getInstance() {
@@ -36,14 +34,14 @@ public class MemoryMeterReadingRepository implements MeterReadingRepository {
      */
     @Override
     public List<MeterReading> findAllMeterReadingByUserId(Long userId) {
-        User user = userRepository.findById(userId);
-        if (user == null) {
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isEmpty()) {
             throw new NotFoundException(String.format("Пользователь с id:%s не найден", userId));
         }
-        if (user.getRole().equals(Role.ADMIN.toString())) {
+        if (user.get().getRole().equals(Role.ADMIN.toString())) {
             return meterReadingList;
         } else {
-            return user.getMeterReadings();
+            return user.get().getMeterReadings();
         }
     }
 
@@ -57,19 +55,19 @@ public class MemoryMeterReadingRepository implements MeterReadingRepository {
      */
     @Override
     public MeterReading save(MeterReading meterReading, Long userId) {
-        User user = userRepository.findById(userId);
-        if (user == null) {
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isEmpty()) {
             throw new NotFoundException(String.format("Пользователь с id:%s не найден", userId));
         }
-        List<MeterReading> meterReadings = user.getMeterReadings();
+        List<MeterReading> meterReadings = user.get().getMeterReadings();
         if (meterReading.getId() == null) {
             meterReading.setId(++id);
         }
         meterReadings.add(meterReading);
-        meterReading.setUser(user);
-        user.setMeterReadings(meterReadings);
+        meterReading.setUser(user.get());
+        user.get().setMeterReadings(meterReadings);
         meterReadingList.add(meterReading);
-        userRepository.save(user);
+        userRepository.save(user.get());
         return meterReading;
     }
 }

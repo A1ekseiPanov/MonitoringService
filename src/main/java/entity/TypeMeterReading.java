@@ -1,17 +1,24 @@
 package entity;
 
-public enum TypeMeterReading {
-    COLD_WATER("Холодная вода"),
-    HOT_WATER("Горячая вода"),
-    HEATING("Отопление");
+import lombok.Getter;
+import lombok.Setter;
 
+/**
+ * Класс, представляющий тип счетчика для показаний.
+ */
+@Getter
+@Setter
+public class TypeMeterReading {
+    /**
+     * Уникальный идентификатор типа счетчика.
+     */
+    private Long id;
+    /**
+     * Наименование типа счетчика.
+     */
     private String title;
 
-    TypeMeterReading(String title) {
+    public TypeMeterReading(String title) {
         this.title = title;
-    }
-
-    public String getTitle() {
-        return title;
     }
 }

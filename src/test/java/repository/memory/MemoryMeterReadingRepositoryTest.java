@@ -14,7 +14,7 @@ import repository.UserRepository;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static util.TestData.USER1;
+import static util.TestData.*;
 
 class MemoryMeterReadingRepositoryTest {
     private MeterReadingRepository meterReadingRepository;
@@ -22,7 +22,6 @@ class MemoryMeterReadingRepositoryTest {
 
     @BeforeEach
     void initEach() {
-        MemoryMeterReadingRepository.resetInstance();
         this.meterReadingRepository = MemoryMeterReadingRepository.getInstance();
         this.userRepository = MemoryUserRepository.getInstance();
     }
@@ -30,18 +29,13 @@ class MemoryMeterReadingRepositoryTest {
     @Test
     void saveAndFindAllByUserIdTest() {
         User user = userRepository.save(USER1);
-
-        MeterReading meterReading1 = new MeterReading(TypeMeterReading.COLD_WATER,
-                BigDecimal.valueOf(100));
-        meterReadingRepository.save(meterReading1, user.getId());
-        MeterReading meterReading2 = new MeterReading(TypeMeterReading.HEATING,
-                BigDecimal.valueOf(200));
-        meterReadingRepository.save(meterReading2, user.getId());
+        meterReadingRepository.save(METER_READING1, user.getId());
+        meterReadingRepository.save(METER_READING2, user.getId());
 
         List<MeterReading> userMeterReadings = meterReadingRepository.findAllMeterReadingByUserId(user.getId());
 
         Assertions.assertThat(userMeterReadings).isNotEmpty();
-        Assertions.assertThat(userMeterReadings).containsExactlyInAnyOrder(meterReading1, meterReading2);
+        Assertions.assertThat(userMeterReadings).containsExactlyInAnyOrder(METER_READING1, METER_READING2);
         Assertions.assertThat(userMeterReadings.size()).isEqualTo(2);
     }
 
@@ -51,7 +45,7 @@ class MemoryMeterReadingRepositoryTest {
         admin.setRole(Role.ADMIN.toString());
         User user = userRepository.save(admin);
 
-        MeterReading meterReading1 = new MeterReading(TypeMeterReading.COLD_WATER,
+        MeterReading meterReading1 = new MeterReading(new TypeMeterReading("Горячая вода"),
                 BigDecimal.valueOf(120));
         meterReadingRepository.save(meterReading1, user.getId());
 

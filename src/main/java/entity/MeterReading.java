@@ -1,5 +1,8 @@
 package entity;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -7,13 +10,29 @@ import java.time.LocalDate;
  * Класс MeterReading представляет сущность показаний счетчика.
  * Он содержит информацию о типе счетчика, показаниях, дате подачи показаний и связанном с ним пользователе.
  */
+@Getter
+@Setter
 public class MeterReading {
-    private Long id; // Уникальный идентификатор
-    private TypeMeterReading type; // Тип счетчика.
-    private BigDecimal reading; // Показания счетчика.
-    private LocalDate localDate; // Дата подачи показаний счетчика.
-    private User user; // Пользователь, связанный с этими показаниями счетчика.
-
+    /**
+     * Уникальный идентификатор.
+     */
+    private Long id;
+    /**
+     * Тип счетчика.
+     */
+    private TypeMeterReading type;
+    /**
+     * Показания счетчика.
+     */
+    private BigDecimal reading;
+    /**
+     * Дата подачи показаний счетчика.
+     */
+    private LocalDate localDate;
+    /**
+     * Пользователь, связанный с этими показаниями счетчика.
+     */
+    private User user;
 
     public MeterReading(TypeMeterReading type, BigDecimal reading) {
         this.type = type;
@@ -21,47 +40,13 @@ public class MeterReading {
         this.localDate = LocalDate.now();
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public TypeMeterReading getType() {
-        return type;
-    }
-
-    public void setType(TypeMeterReading type) {
+    public MeterReading(TypeMeterReading type, BigDecimal reading,LocalDate localDate) {
         this.type = type;
-    }
-
-    public BigDecimal getReading() {
-        return reading;
-    }
-
-    public void setReading(BigDecimal reading) {
         this.reading = reading;
-    }
-
-    public LocalDate getLocalDate() {
-        return localDate;
-    }
-
-    public void setLocalDate(LocalDate localDate) {
         this.localDate = localDate;
     }
 
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    @Override
+      @Override
     public String toString() {
         return "счетчик: " + type.getTitle() +
                 ", показания: " + reading +
