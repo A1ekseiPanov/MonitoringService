@@ -7,7 +7,6 @@ import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Класс User представляет сущность пользователя.
@@ -39,6 +38,22 @@ public class User {
      * Роль пользователя в системе.
      */
     private String role;
+
+    public User(Long id, String username, String password, List<MeterReading> meterReadings, String role) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.meterReadings = new ArrayList<>();
+        this.role = role;
+    }
+
+    public User(Long id, String username, String password, String role) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.meterReadings = new ArrayList<>();
+        this.role = role;
+    }
 
     public User(String username, String password) {
         this.username = username;

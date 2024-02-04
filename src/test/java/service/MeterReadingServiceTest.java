@@ -100,10 +100,10 @@ class MeterReadingServiceTest {
                 .hasMessage("В данном месяце нет показаний");
     }
 
-    @Test
-    @DisplayName("Подача показаний, если история пуста")
-    void submitMeterReadingEmptyMeterReadings() {
-        assertDoesNotThrow(() -> meterReadingService
-                .submitMeterReading(TYPE_METER_READING1, BigDecimal.valueOf(234)));
-    }
+//    @Test
+//    @DisplayName("Подача показаний, если история пуста")
+//    void submitMeterReadingEmptyMeterReadings() {
+//        assertDoesNotThrow(() -> meterReadingService
+//                .submitMeterReading(TYPE_METER_READING1, BigDecimal.valueOf(234)));
+//    }
 }

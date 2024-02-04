@@ -2,7 +2,7 @@ package service;
 
 import entity.TypeMeterReading;
 import repository.TypeMeterReadingRepository;
-import repository.memory.MemoryTypeMeterReadingRepository;
+import repository.jdbc.JdbcTypeMeterReadingRepository;
 import util.AuditLog;
 
 import java.util.List;
@@ -12,7 +12,7 @@ public class TypeMeterReadingService {
     private static final TypeMeterReadingService INSTANCE = new TypeMeterReadingService();
 
     private TypeMeterReadingService() {
-        this.typeMeterReadingRepository = MemoryTypeMeterReadingRepository.getInstance();
+        this.typeMeterReadingRepository = JdbcTypeMeterReadingRepository.getInstance();
     }
 
     public static TypeMeterReadingService getInstance() {

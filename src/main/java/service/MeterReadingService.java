@@ -6,12 +6,16 @@ import entity.User;
 import exception.InputDataConflictException;
 import exception.NotFoundException;
 import repository.MeterReadingRepository;
-import repository.memory.MemoryMeterReadingRepository;
+import repository.jdbc.JdbcMeterReadingRepository;
+import repository.jdbc.JdbcUserRepository;
 import util.AuditLog;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class MeterReadingService {
@@ -22,7 +26,7 @@ public class MeterReadingService {
 
     private MeterReadingService() {
         this.userService = UserService.getInstance();
-        this.meterReadingRepository = MemoryMeterReadingRepository.getInstance();
+        this.meterReadingRepository = JdbcMeterReadingRepository.getInstance(JdbcUserRepository.getInstance());
         this.typeMeterReadingService = TypeMeterReadingService.getInstance();
     }
 
@@ -69,7 +73,7 @@ public class MeterReadingService {
 
     private MeterReading getLatestReadingByType(TypeMeterReading type) {
         return getReadingHistory().stream()
-                .filter(reading -> reading.getType() == type)
+                .filter(reading -> reading.getType().equals(type))
                 .max(Comparator.comparing(MeterReading::getLocalDate))
                 .orElse(null);
     }
@@ -84,7 +88,7 @@ public class MeterReadingService {
     public void submitMeterReading(TypeMeterReading typeMeterReading, BigDecimal reading) {
         User loggedUser = userService.getLoggedUser();
         MeterReading meterReading = new MeterReading(typeMeterReading, reading);
-        List<MeterReading> meterReadings = loggedUser.getMeterReadings();
+        List<MeterReading> meterReadings = meterReadingRepository.findAllMeterReadingByUserId(loggedUser.getId());
         if (meterReadings.isEmpty() || filterByTypeMeterReadings(meterReadings, typeMeterReading).isEmpty()) {
             try {
                 meterReadingRepository.save(meterReading, loggedUser.getId());

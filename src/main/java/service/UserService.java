@@ -1,11 +1,10 @@
 package service;
 
 import entity.User;
-
 import exception.InputDataConflictException;
 import exception.NotFoundException;
 import repository.UserRepository;
-import repository.memory.MemoryUserRepository;
+import repository.jdbc.JdbcUserRepository;
 import util.AuditLog;
 
 import java.util.Optional;
@@ -20,7 +19,7 @@ public class UserService {
     private static UserService INSTANCE = new UserService();
 
     private UserService() {
-        this.userRepository = MemoryUserRepository.getInstance();
+        this.userRepository = JdbcUserRepository.getInstance();
     }
 
     public static UserService getInstance() {

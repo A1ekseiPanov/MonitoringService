@@ -1,5 +1,6 @@
 package entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,6 +13,7 @@ import java.time.LocalDate;
  */
 @Getter
 @Setter
+@AllArgsConstructor
 public class MeterReading {
     /**
      * Уникальный идентификатор.
@@ -40,16 +42,16 @@ public class MeterReading {
         this.localDate = LocalDate.now();
     }
 
-    public MeterReading(TypeMeterReading type, BigDecimal reading,LocalDate localDate) {
+    public MeterReading(TypeMeterReading type, BigDecimal reading, LocalDate localDate) {
         this.type = type;
         this.reading = reading;
         this.localDate = localDate;
     }
 
-      @Override
+    @Override
     public String toString() {
         return "счетчик: " + type.getTitle() +
                 ", показания: " + reading +
-                ", дата подачи показаний: " + localDate ;
+                ", дата подачи показаний: " + localDate;
     }
 }

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd"
+        logicalFilePath="db/changelog.xml">
+
+    <changeSet id="001-create-table" author="panov">
+
+        <createTable tableName="meter_readings" >
+            <column name="id" type="serial8" >
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="type_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reading" type="numeric">
+                <constraints nullable="false"/>
+            </column>
+            <column name="local_date" type="date" defaultValueDate="now()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="type_meter_readings">
+            <column name="id" type="serial8">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="title" type="varchar(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="users">
+            <column name="id" type="serial8">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="username" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="meter_readings"
+                                 baseColumnNames="type_id"
+                                 constraintName="FK_MeterReading_TypeMeterReading"
+                                 referencedTableName="type_meter_readings"
+                                 referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint baseTableName="meter_readings"
+                                 baseColumnNames="user_id"
+                                 constraintName="FK_MeterReading_User"
+                                 referencedTableName="users"
+                                 referencedColumnNames="id"/>
+
+    </changeSet>
+</databaseChangeLog>
