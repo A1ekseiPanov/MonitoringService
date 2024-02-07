@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd"
+        logicalFilePath="db/changelog.xml">
+    <changeSet id="002-insert-data" author="panov">
+        <insert tableName="type_meter_readings">
+            <column name="title" value="Холодная вода"/>
+        </insert>
+        <insert tableName="type_meter_readings">
+            <column name="title" value="Горячая вода"/>
+        </insert>
+        <insert tableName="type_meter_readings">
+            <column name="title" value="Отопление"/>
+        </insert>
+
+        <insert tableName="users">
+            <column name="username" value="admin"/>
+            <column name="password" value="admin"/>
+            <column name="role" value="ADMIN"/>
+        </insert>
+        <insert tableName="users">
+            <column name="username" value="user1"/>
+            <column name="password" value="user1"/>
+            <column name="role" value="USER"/>
+        </insert>
+        <insert tableName="users">
+            <column name="username" value="user2"/>
+            <column name="password" value="user2"/>
+            <column name="role" value="USER"/>
+        </insert>
+
+
+        <insert tableName="meter_readings">
+            <column name="type_id" value="1"/>
+            <column name="reading" value="222"/>
+            <column name="user_id" value="2"/>
+        </insert>
+        <insert tableName="meter_readings">
+            <column name="type_id" value="2"/>
+            <column name="reading" value="22234"/>
+            <column name="user_id" value="2"/>
+        </insert>
+        <insert tableName="meter_readings">
+            <column name="type_id" value="3"/>
+            <column name="reading" value="222111"/>
+            <column name="user_id" value="2"/>
+        </insert>
+        <insert tableName="meter_readings">
+            <column name="type_id" value="1"/>
+            <column name="reading" value="333"/>
+            <column name="user_id" value="3"/>
+        </insert>
+        <insert tableName="meter_readings">
+            <column name="type_id" value="1"/>
+            <column name="reading" value="333"/>
+            <column name="local_date" value="2024-01-04"/>
+            <column name="user_id" value="2"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

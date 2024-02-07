@@ -6,6 +6,7 @@ import entity.MeterReading;
 import entity.Role;
 import entity.TypeMeterReading;
 import entity.User;
+import service.TypeMeterReadingService;
 import util.AuditLog;
 
 import java.math.BigDecimal;
@@ -20,16 +21,19 @@ import java.util.Scanner;
  */
 public class MeterReadingView {
     private static final MeterReadingView INSTANCE = new MeterReadingView();
+    private final TypeMeterReadingService typeMeterReadingService;
     private final Scanner scanner = new Scanner(System.in);
-    private final UserController userController = UserController.getInstance();
-    private final MeterReadingController meterReadingController =
-            MeterReadingController.getInstance();
+    private final UserController userController;
+    private final MeterReadingController meterReadingController;
+
+    private MeterReadingView() {
+        this.typeMeterReadingService = TypeMeterReadingService.getInstance();
+        this.userController = UserController.getInstance();
+        this.meterReadingController = MeterReadingController.getInstance();
+    }
 
     public static MeterReadingView getInstance() {
         return INSTANCE;
-    }
-
-    private MeterReadingView() {
     }
 
     /**
@@ -43,51 +47,62 @@ public class MeterReadingView {
             return;
         }
         if (Objects.equals(loggedUser.getRole(), Role.USER.toString())) {
-            while (true) {
-                printLoggedInMenu();
-                int choice = getUserChoice();
-
-                switch (choice) {
-                    case 1:
-                        submitMeterReading();
-                        break;
-                    case 2:
-                        printLastMeterReading();
-                        break;
-                    case 3:
-                        printAllMeterReadingsByMonth();
-                        break;
-                    case 4:
-                        printReadingHistory();
-                        break;
-
-                    case 5:
-                        return;
-                    default:
-                        System.out.println("Неверный выбор. Пожалуйста, попробуйте снова.");
-                }
-            }
+            menuActionsUser();
         } else {
-            while (true) {
-                printLoggedAdminInMenu();
+            menuActionsAdmin();
+        }
+    }
 
-                int choice = getUserChoice();
+    private void menuActionsAdmin() {
+        while (true) {
+            printLoggedAdminInMenu();
 
-                switch (choice) {
-                    case 1:
-                        printAllMeterReadingsByMonth();
-                        break;
-                    case 2:
-                        printReadingHistory();
-                        break;
-                    case 3:
-                        AuditLog.getLog().forEach(System.out::println);
-                        break;
-                    case 4:
-                        return;
-                    default:
-                        System.out.println("Неверный выбор. Пожалуйста, попробуйте снова.");
-                }
+            int choice = getUserChoice();
+
+            switch (choice) {
+                case 1:
+                    printAllMeterReadingsByMonth();
+                    break;
+                case 2:
+                    printReadingHistory();
+                    break;
+                case 3:
+                    AuditLog.getLog().forEach(System.out::println);
+                    break;
+                case 4:
+                    addingType();
+                    break;
+                case 5:
+                    return;
+                default:
+                    System.out.println("Неверный выбор. Пожалуйста, попробуйте снова.");
+            }
+        }
+    }
+
+    private void menuActionsUser() {
+        while (true) {
+            printLoggedInMenu();
+            int choice = getUserChoice();
+
+            switch (choice) {
+                case 1:
+                    submitMeterReading();
+                    break;
+                case 2:
+                    printLastMeterReading();
+                    break;
+                case 3:
+                    printAllMeterReadingsByMonth();
+                    break;
+                case 4:
+                    printReadingHistory();
+                    break;
+
+                case 5:
+                    return;
+                default:
+                    System.out.println("Неверный выбор. Пожалуйста, попробуйте снова.");
             }
         }
     }
@@ -106,7 +121,8 @@ public class MeterReadingView {
         System.out.println("1. Показания пользователей за конкретный месяц");
         System.out.println("2. Показания пользователей");
         System.out.println("3. Аудит действий пользователей");
-        System.out.println("4. Вернуться в главное меню");
+        System.out.println("4. Добавление счетчиков");
+        System.out.println("5. Вернуться в главное меню");
     }
 
     private int getUserChoice() {
@@ -149,15 +165,12 @@ public class MeterReadingView {
         });
     }
 
-
     /**
      * Печатает список типов счетчиков.
      */
     private List<TypeMeterReading> printTypeMeterReading() {
-        List<TypeMeterReading> typeMeterReadingList = List.of(TypeMeterReading.values());
-        for (TypeMeterReading t : typeMeterReadingList) {
-            System.out.println(t.ordinal() + 1 + ". " + t.getTitle());
-        }
+        List<TypeMeterReading> typeMeterReadingList = typeMeterReadingService.getAll();
+        typeMeterReadingList.forEach(t -> System.out.println(t.getId() + ". " + t.getTitle()));
         return typeMeterReadingList;
     }
 
@@ -167,17 +180,29 @@ public class MeterReadingView {
     private void submitMeterReading() {
         System.out.println("Счетчик:");
         List<TypeMeterReading> typeMeterReadingList = printTypeMeterReading();
-        int choice = getUserChoice();
-        TypeMeterReading meterReading = typeMeterReadingList.stream()
-                .filter(typeMeterReading -> typeMeterReading.ordinal() + 1 == choice)
-                .findAny()
-                .orElse(null);
+        TypeMeterReading meterReading;
+        do {
+            int choice = getUserChoice();
+            meterReading = typeMeterReadingList.stream()
+                    .filter(typeMeterReading -> typeMeterReading.getId() == choice)
+                    .findAny()
+                    .orElse(null);
+            if(meterReading==null) {
+                System.out.println("Такого счетчика нет");
+            }
+        } while (meterReading == null);
+
         System.out.println("Показания:");
         while (!scanner.hasNextBigDecimal()) {
             System.out.println("Неверный ввод.");
             scanner.next();
         }
         BigDecimal reading = scanner.nextBigDecimal();
+        while (reading.compareTo(BigDecimal.ZERO) <= 0) {
+            System.out.println("Показания счетчиков должны быть больше 0");
+            reading = scanner.nextBigDecimal();
+
+        }
         if (meterReading != null) {
             meterReadingController.submitMeterReading(meterReading, reading);
         }
@@ -190,7 +215,7 @@ public class MeterReadingView {
      */
     private List<MeterReading> submitMonthYear() {
         System.out.println("Введите месяц от 1 до 12");
-        while (!scanner.hasNextBigDecimal()) {
+        while (!scanner.hasNextInt()) {
             System.out.println("Неверный ввод.");
             scanner.next();
         }
@@ -200,16 +225,31 @@ public class MeterReadingView {
             month = scanner.nextInt();
         }
         System.out.println("Введите год");
-        while (!scanner.hasNextBigDecimal()) {
+        while (!scanner.hasNextInt()) {
             System.out.println("Неверный ввод.");
             scanner.next();
         }
         int year = scanner.nextInt();
-        while (year > LocalDate.now().getYear() && year < 1970) {
+        while (year > LocalDate.now().getYear() || year < 1970) {
             System.out.println("Можно выбрать показания с 1970 года по текущий год");
             year = scanner.nextInt();
         }
         return meterReadingController.getAllMeterReadingsByMonth(month, year);
+    }
+
+    private void addingType() {
+        System.out.println("Введите название типа счетчика:");
+        scanner.nextLine();
+        while (!scanner.hasNextLine()) {
+            System.out.println("Неверный ввод.");
+            scanner.next();
+        }
+        String title = scanner.nextLine();
+        try {
+            typeMeterReadingService.addingType(title);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     private void printAllMeterReadingsByMonth() {

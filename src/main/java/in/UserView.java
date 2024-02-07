@@ -9,11 +9,13 @@ import java.util.Scanner;
  * Он содержит методы для регистрации, входа и выхода пользователя.
  */
 public class UserView {
-    private static final Scanner scanner = new Scanner(System.in);
-    private final UserController userController = UserController.getInstance();
+    private final Scanner scanner;
+    private final UserController userController;
     private static final UserView INSTANCE = new UserView();
 
     public UserView() {
+        this.scanner = new Scanner(System.in);
+        this.userController = UserController.getInstance();
     }
 
     public static UserView getInstance() {

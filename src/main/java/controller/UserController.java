@@ -12,9 +12,10 @@ import service.UserService;
  */
 public class UserController {
     private static final UserController INSTANCE = new UserController();
-    private final UserService userService = UserService.getInstance();
+    private final UserService userService;
 
     private UserController() {
+        this.userService = UserService.getInstance();
     }
 
     public static UserController getInstance() {

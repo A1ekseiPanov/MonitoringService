@@ -6,20 +6,28 @@ import entity.User;
 import exception.InputDataConflictException;
 import exception.NotFoundException;
 import repository.MeterReadingRepository;
-import repository.memory.MemoryMeterReadingRepository;
+import repository.jdbc.JdbcMeterReadingRepository;
+import repository.jdbc.JdbcUserRepository;
 import util.AuditLog;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class MeterReadingService {
-    private final UserService userService = UserService.getInstance();
-    private final MeterReadingRepository meterReadingRepository = MemoryMeterReadingRepository.getInstance();
+    private UserService userService;
+    private MeterReadingRepository meterReadingRepository;
+    private TypeMeterReadingService typeMeterReadingService;
     private static final MeterReadingService INSTANCE = new MeterReadingService();
 
     private MeterReadingService() {
+        this.userService = UserService.getInstance();
+        this.meterReadingRepository = JdbcMeterReadingRepository.getInstance(JdbcUserRepository.getInstance());
+        this.typeMeterReadingService = TypeMeterReadingService.getInstance();
     }
 
     public static MeterReadingService getInstance() {
@@ -57,14 +65,17 @@ public class MeterReadingService {
      * @throws NotFoundException если пользователь не вошел в систему или у него нет показаний
      */
     public List<MeterReading> getLatestReadingsByTypes() {
-        List<TypeMeterReading> meterTypes = List.of(TypeMeterReading.values());
-
-        return meterTypes.stream().map(meterType -> getReadingHistory().stream()
-                        .filter(reading -> reading.getType() == meterType)
-                        .max(Comparator.comparing(MeterReading::getLocalDate))
-                        .orElse(null))
+        return typeMeterReadingService.getAll().stream()
+                .map(this::getLatestReadingByType)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+
+    private MeterReading getLatestReadingByType(TypeMeterReading type) {
+        return getReadingHistory().stream()
+                .filter(reading -> reading.getType().equals(type))
+                .max(Comparator.comparing(MeterReading::getLocalDate))
+                .orElse(null);
     }
 
     /**
@@ -75,30 +86,14 @@ public class MeterReadingService {
      * @throws InputDataConflictException если показание уже было отправлено в текущем месяце
      */
     public void submitMeterReading(TypeMeterReading typeMeterReading, BigDecimal reading) {
-        User loggedUser = UserService.getInstance().getLoggedUser();
+        User loggedUser = userService.getLoggedUser();
         MeterReading meterReading = new MeterReading(typeMeterReading, reading);
-        List<MeterReading> meterReadings = loggedUser.getMeterReadings();
-        if (meterReadings.isEmpty()) {
+        List<MeterReading> meterReadings = meterReadingRepository.findAllMeterReadingByUserId(loggedUser.getId());
+        if (meterReadings.isEmpty() || filterByTypeMeterReadings(meterReadings, typeMeterReading).isEmpty()) {
             try {
                 meterReadingRepository.save(meterReading, loggedUser.getId());
                 AuditLog.logAction("Пользователь username(" + loggedUser.getUsername()
                         + ") Передал показания " + typeMeterReading.getTitle()
-                        + ": " + meterReading.getReading());
-                return;
-            } catch (NotFoundException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-        MeterReading filterByTypeMeterReadings = meterReadings.stream()
-                .filter(mr -> mr.getType().equals(typeMeterReading)
-                        && mr.getLocalDate().getMonth().equals(LocalDate.now().getMonth()))
-                .findAny()
-                .orElse(null);
-        if (filterByTypeMeterReadings == null) {
-            try {
-                meterReadingRepository.save(meterReading, loggedUser.getId());
-                AuditLog.logAction("Пользователь :" + loggedUser.getUsername()
-                        + ", Передал показания " + typeMeterReading.getTitle()
                         + ": " + meterReading.getReading());
             } catch (NotFoundException e) {
                 System.out.println(e.getMessage());
@@ -106,6 +101,13 @@ public class MeterReadingService {
         } else {
             throw new InputDataConflictException("Вы передавали показания по данному счетчику в этом месяце");
         }
+    }
+
+    private Optional<MeterReading> filterByTypeMeterReadings(List<MeterReading> meterReadings, TypeMeterReading type) {
+        return meterReadings.stream()
+                .filter(mr -> mr.getType().equals(type)
+                        && mr.getLocalDate().getMonth().equals(LocalDate.now().getMonth()))
+                .findAny();
     }
 
     /**
@@ -117,12 +119,12 @@ public class MeterReadingService {
      * @throws NotFoundException если пользователь не вошел в систему или в указанном месяце нет показаний
      */
     public List<MeterReading> getAllMeterReadingsByMonth(int month, int year) {
-        User currentUser = UserService.getInstance().getLoggedUser();
-        if (currentUser == null) {
+        User loggedUser = userService.getLoggedUser();
+        if (loggedUser == null) {
             throw new NotFoundException("Войдите в систему");
         }
         List<MeterReading> meterReadings = meterReadingRepository
-                .findAllMeterReadingByUserId(currentUser.getId());
+                .findAllMeterReadingByUserId(loggedUser.getId());
         List<MeterReading> meterReading = meterReadings.stream()
                 .filter(mr -> mr.getLocalDate().getMonthValue() == month
                         && mr.getLocalDate().getYear() == year)

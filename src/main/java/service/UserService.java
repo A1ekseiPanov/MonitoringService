@@ -1,12 +1,13 @@
 package service;
 
 import entity.User;
-
 import exception.InputDataConflictException;
 import exception.NotFoundException;
 import repository.UserRepository;
-import repository.memory.MemoryUserRepository;
+import repository.jdbc.JdbcUserRepository;
 import util.AuditLog;
+
+import java.util.Optional;
 
 /**
  * Класс UserService предоставляет методы для работы с пользователями в системе.
@@ -14,20 +15,16 @@ import util.AuditLog;
  */
 public class UserService {
     private User registeredUser;
-    private final UserRepository userRepository = MemoryUserRepository.getInstance();
+    private UserRepository userRepository;
     private static UserService INSTANCE = new UserService();
 
     private UserService() {
+        this.userRepository = JdbcUserRepository.getInstance();
     }
 
     public static UserService getInstance() {
         return INSTANCE;
     }
-
-    public static void resetInstance() {
-        INSTANCE = new UserService();
-    }
-
 
     /**
      * Создает нового пользователя с указанным именем пользователя и паролем.
@@ -37,8 +34,8 @@ public class UserService {
      * @throws InputDataConflictException если пользователь с таким именем уже существует
      */
     public void register(String username, String password) {
-        User currentUser = userRepository.findByUsername(username);
-        if (currentUser != null && currentUser.getPassword().equals(password)) {
+        Optional<User> currentUser = userRepository.findByUsername(username);
+        if (currentUser.isPresent() && currentUser.get().getPassword().equals(password)) {
             throw new InputDataConflictException("Такой пользователь уже существует");
         } else {
             userRepository.save(new User(username, password));
@@ -55,15 +52,15 @@ public class UserService {
      * @throws IllegalArgumentException   если указаны неверное имя пользователя или пароль
      */
     public void login(String username, String password) {
-        User currentUser = userRepository.findByUsername(username);
+        Optional<User> currentUser = userRepository.findByUsername(username);
         User loggedUser = getLoggedUser();
         if (loggedUser != null && loggedUser.getUsername().equals(username) && loggedUser.getPassword().equals(password)) {
             throw new InputDataConflictException("Вы уже выполнили вход");
         } else if (loggedUser != null) {
             throw new InputDataConflictException("Нельзя войти пока есть залогиненый пользователь: username(" + getLoggedUser().getUsername() + ")");
         }
-        if (currentUser != null && currentUser.getPassword().equals(password)) {
-            registeredUser = currentUser;
+        if (currentUser.isPresent() && currentUser.get().getPassword().equals(password)) {
+            registeredUser = currentUser.get();
             AuditLog.logAction("Пользователь username(" + username + ") вошел в систему");
         } else {
             throw new IllegalArgumentException("Неверное имя пользователя или пароль. Ошибка входа.");

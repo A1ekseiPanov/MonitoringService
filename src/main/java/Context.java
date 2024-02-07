@@ -8,9 +8,15 @@ import java.util.Scanner;
  * Он содержит методы для запуска и управления приложением.
  */
 public class Context {
-    private static final Scanner scanner = new Scanner(System.in);
-    private final UserView userView = UserView.getInstance();
-    private final MeterReadingView meterReadingView = MeterReadingView.getInstance();
+    private final Scanner scanner;
+    private final UserView userView;
+    private final MeterReadingView meterReadingView;
+
+    public Context() {
+        this.scanner = new Scanner(System.in);
+        this.userView = UserView.getInstance();
+        this.meterReadingView = MeterReadingView.getInstance();
+    }
 
     /**
      * Запускает приложение и обрабатывает основной цикл.
@@ -34,7 +40,7 @@ public class Context {
         }
     }
 
-    private static int getUserChoice() {
+    private int getUserChoice() {
         System.out.print("Выберете пункт из меню: ");
         while (!scanner.hasNextInt()) {
             System.out.println("Пожалуйста, введите число.");
