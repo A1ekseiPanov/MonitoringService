@@ -1,5 +1,15 @@
+import controller.MeterReadingController;
+import controller.UserController;
 import in.MeterReadingView;
 import in.UserView;
+import repository.MeterReadingRepository;
+import repository.TypeMeterReadingRepository;
+import repository.jdbc.JdbcMeterReadingRepository;
+import repository.jdbc.JdbcTypeMeterReadingRepository;
+import repository.jdbc.JdbcUserRepository;
+import service.MeterReadingService;
+import service.TypeMeterReadingService;
+import service.UserService;
 
 import java.util.Scanner;
 
@@ -9,13 +19,29 @@ import java.util.Scanner;
  */
 public class Context {
     private final Scanner scanner;
+    private final JdbcUserRepository userRepository;
+    private final UserService userService;
+    private final UserController userController;
     private final UserView userView;
+    private final TypeMeterReadingRepository typeMeterReadingRepository;
+    private final TypeMeterReadingService typeMeterReadingService;
+    private final MeterReadingRepository meterReadingRepository;
+    private final MeterReadingService meterReadingService;
+    private final MeterReadingController meterReadingController;
     private final MeterReadingView meterReadingView;
 
     public Context() {
         this.scanner = new Scanner(System.in);
-        this.userView = UserView.getInstance();
-        this.meterReadingView = MeterReadingView.getInstance();
+        this.userRepository = new JdbcUserRepository();
+        this.userService = new UserService(userRepository);
+        this.userController = new UserController(userService);
+        this.userView = new UserView(scanner,userController);
+        this.typeMeterReadingRepository = new JdbcTypeMeterReadingRepository();
+        this.typeMeterReadingService = new TypeMeterReadingService(typeMeterReadingRepository);
+        this.meterReadingRepository = new JdbcMeterReadingRepository(userRepository,typeMeterReadingRepository);
+        this.meterReadingService = new MeterReadingService(userService,meterReadingRepository,typeMeterReadingService);
+        this.meterReadingController = new MeterReadingController(meterReadingService);
+        this.meterReadingView = new MeterReadingView(typeMeterReadingService,scanner,userController,meterReadingController);
     }
 
     /**

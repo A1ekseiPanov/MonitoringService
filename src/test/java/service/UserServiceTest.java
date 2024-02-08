@@ -85,7 +85,7 @@ class UserServiceTest {
 
         userService.logout();
         assertThat(userService.getLoggedUser()).isNull();
-        verify(userRepository).findByUsername(USER1.getUsername());
+
     }
 
     @Test

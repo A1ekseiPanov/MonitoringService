@@ -1,6 +1,7 @@
 package in;
 
 import controller.UserController;
+import lombok.AllArgsConstructor;
 
 import java.util.Scanner;
 
@@ -8,19 +9,10 @@ import java.util.Scanner;
  * Класс UserView представляет представление пользовательского интерфейса для взаимодействия с пользователями.
  * Он содержит методы для регистрации, входа и выхода пользователя.
  */
+@AllArgsConstructor
 public class UserView {
     private final Scanner scanner;
     private final UserController userController;
-    private static final UserView INSTANCE = new UserView();
-
-    public UserView() {
-        this.scanner = new Scanner(System.in);
-        this.userController = UserController.getInstance();
-    }
-
-    public static UserView getInstance() {
-        return INSTANCE;
-    }
 
     /**
      * Регистрирует нового пользователя, запрашивая у пользователя имя пользователя и пароль.

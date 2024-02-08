@@ -4,25 +4,18 @@ import entity.MeterReading;
 import entity.TypeMeterReading;
 import exception.InputDataConflictException;
 import exception.NotFoundException;
+import lombok.AllArgsConstructor;
 import service.MeterReadingService;
 
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
+@AllArgsConstructor
 public class MeterReadingController {
     private final MeterReadingService meterReadingService;
-    private static final MeterReadingController INSTANCE = new MeterReadingController();
 
-    private MeterReadingController() {
-        this.meterReadingService = MeterReadingService.getInstance();
-    }
-
-    public static MeterReadingController getInstance() {
-        return INSTANCE;
-    }
-
-    public List<MeterReading> getAllReadings() {
+     public List<MeterReading> getAllReadings() {
         try {
             return meterReadingService.getReadingHistory();
         } catch (NotFoundException e) {

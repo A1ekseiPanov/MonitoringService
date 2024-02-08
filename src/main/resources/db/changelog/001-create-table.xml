@@ -5,11 +5,14 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd"
         logicalFilePath="db/changelog.xml">
-
     <changeSet id="001-create-table" author="panov">
+        <sql>
+            CREATE SCHEMA IF NOT EXISTS dbo;
+        </sql>
 
-        <createTable tableName="meter_readings" >
-            <column name="id" type="serial8" >
+        <createSequence sequenceName="meter_readings_seq" startValue="1" incrementBy="1"/>
+                <createTable tableName="meter_readings" >
+            <column name="id"  type="bigint" defaultValueComputed="nextval('meter_readings_seq')">
                 <constraints primaryKey="true"/>
             </column>
             <column name="type_id" type="bigint">
@@ -26,8 +29,9 @@
             </column>
         </createTable>
 
+        <createSequence sequenceName="type_seq" startValue="1" incrementBy="1"/>
         <createTable tableName="type_meter_readings">
-            <column name="id" type="serial8">
+            <column name="id" type="bigint" defaultValueComputed="nextval('type_seq')">
                 <constraints primaryKey="true"/>
             </column>
             <column name="title" type="varchar(50)">
@@ -35,8 +39,9 @@
             </column>
         </createTable>
 
+        <createSequence sequenceName="users_seq" startValue="1" incrementBy="1"/>
         <createTable tableName="users">
-            <column name="id" type="serial8">
+            <column name="id" type="bigint" defaultValueComputed="nextval('users_seq')">
                 <constraints primaryKey="true"/>
             </column>
             <column name="username" type="varchar(255)">
@@ -61,6 +66,5 @@
                                  constraintName="FK_MeterReading_User"
                                  referencedTableName="users"
                                  referencedColumnNames="id"/>
-
     </changeSet>
 </databaseChangeLog>

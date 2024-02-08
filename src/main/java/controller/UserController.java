@@ -3,6 +3,7 @@ package controller;
 import entity.User;
 import exception.InputDataConflictException;
 import exception.NotFoundException;
+import lombok.AllArgsConstructor;
 import service.UserService;
 
 
@@ -10,17 +11,9 @@ import service.UserService;
  * Класс UserController отвечает за управление пользователями в системе.
  * Он предоставляет методы для регистрации, входа и выхода пользователя.
  */
+@AllArgsConstructor
 public class UserController {
-    private static final UserController INSTANCE = new UserController();
     private final UserService userService;
-
-    private UserController() {
-        this.userService = UserService.getInstance();
-    }
-
-    public static UserController getInstance() {
-        return INSTANCE;
-    }
 
     public void register(String username, String password) {
         try {

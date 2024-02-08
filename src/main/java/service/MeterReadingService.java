@@ -1,13 +1,13 @@
 package service;
 
 import entity.MeterReading;
+import entity.Role;
 import entity.TypeMeterReading;
 import entity.User;
 import exception.InputDataConflictException;
 import exception.NotFoundException;
+import lombok.AllArgsConstructor;
 import repository.MeterReadingRepository;
-import repository.jdbc.JdbcMeterReadingRepository;
-import repository.jdbc.JdbcUserRepository;
 import util.AuditLog;
 
 import java.math.BigDecimal;
@@ -18,21 +18,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@AllArgsConstructor
 public class MeterReadingService {
-    private UserService userService;
-    private MeterReadingRepository meterReadingRepository;
-    private TypeMeterReadingService typeMeterReadingService;
-    private static final MeterReadingService INSTANCE = new MeterReadingService();
-
-    private MeterReadingService() {
-        this.userService = UserService.getInstance();
-        this.meterReadingRepository = JdbcMeterReadingRepository.getInstance(JdbcUserRepository.getInstance());
-        this.typeMeterReadingService = TypeMeterReadingService.getInstance();
-    }
-
-    public static MeterReadingService getInstance() {
-        return INSTANCE;
-    }
+    private final UserService userService;
+    private final MeterReadingRepository meterReadingRepository;
+    private final TypeMeterReadingService typeMeterReadingService;
 
     /**
      * Возвращает список всех показаний счетчиков для вошедшего в систему пользователя.
@@ -47,8 +37,9 @@ public class MeterReadingService {
         }
         List<MeterReading> userReadings = null;
         try {
-            userReadings = meterReadingRepository
-                    .findAllMeterReadingByUserId(loggedUser.getId());
+            userReadings = loggedUser.getRole().equals(Role.ADMIN.toString())
+                    ? meterReadingRepository.findAll()
+                    : meterReadingRepository.findAllByUserId(loggedUser.getId());
         } catch (NotFoundException e) {
             System.out.println(e.getMessage());
         }
@@ -88,7 +79,7 @@ public class MeterReadingService {
     public void submitMeterReading(TypeMeterReading typeMeterReading, BigDecimal reading) {
         User loggedUser = userService.getLoggedUser();
         MeterReading meterReading = new MeterReading(typeMeterReading, reading);
-        List<MeterReading> meterReadings = meterReadingRepository.findAllMeterReadingByUserId(loggedUser.getId());
+        List<MeterReading> meterReadings = meterReadingRepository.findAllByUserId(loggedUser.getId());
         if (meterReadings.isEmpty() || filterByTypeMeterReadings(meterReadings, typeMeterReading).isEmpty()) {
             try {
                 meterReadingRepository.save(meterReading, loggedUser.getId());
@@ -124,7 +115,7 @@ public class MeterReadingService {
             throw new NotFoundException("Войдите в систему");
         }
         List<MeterReading> meterReadings = meterReadingRepository
-                .findAllMeterReadingByUserId(loggedUser.getId());
+                .findAllByUserId(loggedUser.getId());
         List<MeterReading> meterReading = meterReadings.stream()
                 .filter(mr -> mr.getLocalDate().getMonthValue() == month
                         && mr.getLocalDate().getYear() == year)

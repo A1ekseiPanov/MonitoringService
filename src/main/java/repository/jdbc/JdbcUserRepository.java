@@ -12,7 +12,7 @@ import java.util.Optional;
  * Реализация репозитория для работы с пользователями в базе данных с использованием JDBC.
  */
 public class JdbcUserRepository implements UserRepository {
-    private static JdbcUserRepository INSTANCE = new JdbcUserRepository();
+
     public static final String FIND_USER_BY_ID =
             "SELECT id, username, password, role FROM users WHERE id = ?";
     public static final String FIND_USER_BY_USERNAME =
@@ -20,13 +20,6 @@ public class JdbcUserRepository implements UserRepository {
     public static final String SAVE_USER = "INSERT INTO users (username, password, role) VALUES (?,?,?)";
     public static final String UPDATE_USER =
             "UPDATE users SET username = ?, password = ? WHERE id = ?";
-
-    private JdbcUserRepository() {
-    }
-
-    public static JdbcUserRepository getInstance() {
-        return INSTANCE;
-    }
 
     /**
      * Поиск пользователя по его идентификатору.
@@ -104,18 +97,28 @@ public class JdbcUserRepository implements UserRepository {
      * @return Сохраненный пользователь с присвоенным идентификатором
      */
     public User save(User user, Connection connection) {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(SAVE_USER, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement preparedStatement = connection
+                .prepareStatement(SAVE_USER, Statement.RETURN_GENERATED_KEYS)) {
+            connection.setAutoCommit(false);
             preparedStatement.setString(1, user.getUsername());
             preparedStatement.setString(2, user.getPassword());
             preparedStatement.setString(3, user.getRole());
             preparedStatement.executeUpdate();
+            connection.commit();
 
             ResultSet key = preparedStatement.getGeneratedKeys();
             while (key.next()) {
                 user.setId(key.getLong("id"));
             }
             return user;
-        } catch (SQLException e) {
+        } catch (Exception e) {
+            if (connection != null) {
+                try {
+                    connection.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
             throw new RuntimeException(e);
         }
     }
@@ -142,13 +145,22 @@ public class JdbcUserRepository implements UserRepository {
         User user = findById(id, connection).orElse(null);
         if (user != null) {
             try (PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_USER)) {
+                connection.setAutoCommit(false);
                 preparedStatement.setString(1, updatedUser.getUsername());
                 preparedStatement.setString(2, updatedUser.getPassword());
                 preparedStatement.setLong(3, id);
                 preparedStatement.executeUpdate();
+                connection.commit();
                 updatedUser.setId(id);
                 return updatedUser;
-            } catch (SQLException e) {
+            } catch (Exception e) {
+                if (connection != null) {
+                    try {
+                        connection.rollback();
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
+                }
                 throw new RuntimeException(e);
             }
         } else {

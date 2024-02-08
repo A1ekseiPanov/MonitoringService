@@ -4,7 +4,6 @@ import entity.User;
 import exception.InputDataConflictException;
 import exception.NotFoundException;
 import repository.UserRepository;
-import repository.jdbc.JdbcUserRepository;
 import util.AuditLog;
 
 import java.util.Optional;
@@ -15,15 +14,10 @@ import java.util.Optional;
  */
 public class UserService {
     private User registeredUser;
-    private UserRepository userRepository;
-    private static UserService INSTANCE = new UserService();
+    private final UserRepository userRepository;
 
-    private UserService() {
-        this.userRepository = JdbcUserRepository.getInstance();
-    }
-
-    public static UserService getInstance() {
-        return INSTANCE;
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     /**

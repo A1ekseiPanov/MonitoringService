@@ -6,6 +6,7 @@ import entity.MeterReading;
 import entity.Role;
 import entity.TypeMeterReading;
 import entity.User;
+import lombok.AllArgsConstructor;
 import service.TypeMeterReadingService;
 import util.AuditLog;
 
@@ -19,22 +20,12 @@ import java.util.Scanner;
  * Класс MeterReadingView представляет пользовательский интерфейс для взаимодействия с данными о показаниях счетчиков.
  * Он обрабатывает действия пользователей, связанные с передачей показаний, просмотром истории показаний и другими функциями.
  */
+@AllArgsConstructor
 public class MeterReadingView {
-    private static final MeterReadingView INSTANCE = new MeterReadingView();
     private final TypeMeterReadingService typeMeterReadingService;
-    private final Scanner scanner = new Scanner(System.in);
+    private final Scanner scanner;
     private final UserController userController;
     private final MeterReadingController meterReadingController;
-
-    private MeterReadingView() {
-        this.typeMeterReadingService = TypeMeterReadingService.getInstance();
-        this.userController = UserController.getInstance();
-        this.meterReadingController = MeterReadingController.getInstance();
-    }
-
-    public static MeterReadingView getInstance() {
-        return INSTANCE;
-    }
 
     /**
      * Выполняет действия для пользователя, который вошел в систему.

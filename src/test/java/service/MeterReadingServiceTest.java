@@ -48,7 +48,7 @@ class MeterReadingServiceTest {
     @DisplayName("Получение истории показаний")
     void getReadingHistoryTest() {
         when(meterReadingRepository
-                .findAllMeterReadingByUserId(USER1.getId())).thenReturn(METER_READINGS);
+                .findAllByUserId(USER1.getId())).thenReturn(METER_READINGS);
 
         assertThat(meterReadingService.getReadingHistory()).isEqualTo(METER_READINGS);
     }
@@ -56,8 +56,9 @@ class MeterReadingServiceTest {
     @Test
     @DisplayName("Получение истории показаний, если история пуста")
     void getReadingHistoryIsEmptyTest() {
+        when(userService.getLoggedUser()).thenReturn(USER1);
         when(meterReadingRepository
-                .findAllMeterReadingByUserId(USER1.getId())).thenReturn(Collections.emptyList());
+                .findAllByUserId(USER1.getId())).thenReturn(Collections.emptyList());
 
         assertThatThrownBy(() -> meterReadingService.getReadingHistory())
                 .isInstanceOf(NotFoundException.class)
@@ -67,7 +68,7 @@ class MeterReadingServiceTest {
     @Test
     @DisplayName("Получение всех показаний счетчиков за указанный месяц")
     void getAllMeterReadingsByMonthTest() {
-        when(meterReadingRepository.findAllMeterReadingByUserId(USER1.getId()))
+        when(meterReadingRepository.findAllByUserId(USER1.getId()))
                 .thenReturn(METER_READINGS);
 
         List<MeterReading> result = meterReadingService
@@ -91,8 +92,8 @@ class MeterReadingServiceTest {
     @Test
     @DisplayName("Получение всех показаний счетчиков за указанный месяц, если в указанный месяц нет показаний")
     void getAllMeterReadingsByMonthNoReadingsForMonthTest() {
-        when(meterReadingRepository.findAllMeterReadingByUserId(USER1.getId()))
-                .thenReturn(METER_READINGS);
+        when(meterReadingRepository.findAllByUserId(USER1.getId()))
+                .thenReturn(Collections.emptyList());
 
         assertThatThrownBy(() -> {
             meterReadingService.getAllMeterReadingsByMonth(MONTH, YEAR);
@@ -100,10 +101,10 @@ class MeterReadingServiceTest {
                 .hasMessage("В данном месяце нет показаний");
     }
 
-//    @Test
-//    @DisplayName("Подача показаний, если история пуста")
-//    void submitMeterReadingEmptyMeterReadings() {
-//        assertDoesNotThrow(() -> meterReadingService
-//                .submitMeterReading(TYPE_METER_READING1, BigDecimal.valueOf(234)));
-//    }
+    @Test
+    @DisplayName("Подача показаний, если история пуста")
+    void submitMeterReadingEmptyMeterReadings() {
+        assertDoesNotThrow(() -> meterReadingService
+                .submitMeterReading(TYPE_METER_READING1, BigDecimal.valueOf(234)));
+    }
 }

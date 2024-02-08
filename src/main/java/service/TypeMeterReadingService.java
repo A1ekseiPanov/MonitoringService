@@ -1,23 +1,15 @@
 package service;
 
 import entity.TypeMeterReading;
+import lombok.AllArgsConstructor;
 import repository.TypeMeterReadingRepository;
-import repository.jdbc.JdbcTypeMeterReadingRepository;
 import util.AuditLog;
 
 import java.util.List;
 
+@AllArgsConstructor
 public class TypeMeterReadingService {
-    private TypeMeterReadingRepository typeMeterReadingRepository;
-    private static final TypeMeterReadingService INSTANCE = new TypeMeterReadingService();
-
-    private TypeMeterReadingService() {
-        this.typeMeterReadingRepository = JdbcTypeMeterReadingRepository.getInstance();
-    }
-
-    public static TypeMeterReadingService getInstance() {
-        return INSTANCE;
-    }
+    private final TypeMeterReadingRepository typeMeterReadingRepository;
 
     public void addingType(String title) {
         typeMeterReadingRepository.save(new TypeMeterReading(title));
