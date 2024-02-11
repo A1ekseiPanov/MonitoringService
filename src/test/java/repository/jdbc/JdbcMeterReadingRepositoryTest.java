@@ -1,7 +1,6 @@
 package repository.jdbc;
 
 import entity.MeterReading;
-import entity.User;
 import exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 
@@ -17,14 +16,14 @@ class JdbcMeterReadingRepositoryTest extends TestcontainersAbstract{
 
     @Test
     void saveAndFindAllByUserIdTest() {
-        User user = userRepository.save(new User("userrr", "user"), connection);
-        meterReadingRepository.save(NEW_METER_READING1, user.getId(), connection);
-        meterReadingRepository.save(NEW_METER_READING2, user.getId(), connection);
+
+        meterReadingRepository.save(NEW_METER_READING1, USER2.getId(), connection);
+        meterReadingRepository.save(NEW_METER_READING2,USER2.getId(), connection);
 
         List<MeterReading> userMeterReadings = meterReadingRepository
-                .findAllByUserId(user.getId(), connection);
+                .findAllByUserId(USER2.getId(), connection);
         assertThat(userMeterReadings).isNotEmpty();
-        assertThat(userMeterReadings.size()).isEqualByComparingTo(2);
+        assertThat(userMeterReadings.size()).isEqualByComparingTo(3);
     }
 
     @Test

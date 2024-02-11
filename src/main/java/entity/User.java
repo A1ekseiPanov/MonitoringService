@@ -1,9 +1,8 @@
 package entity;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,10 +16,12 @@ import java.util.List;
 @Setter
 @EqualsAndHashCode
 @ToString
+
 public class User {
     /**
      * Уникальный идентификатор пользователя.
      */
+    @JsonProperty("userId")
     private Long id;
     /**
      * Имя пользователя.
@@ -29,22 +30,21 @@ public class User {
     /**
      * Пароль пользователя.
      */
+    @JsonIgnore
     private String password;
     /**
      * Список показаний счетчиков, связанных с пользователем.
      */
+    @JsonIgnore
     private List<MeterReading> meterReadings;
     /**
      * Роль пользователя в системе.
      */
     private String role;
 
-    public User(Long id, String username, String password, List<MeterReading> meterReadings, String role) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
+    public User() {
         this.meterReadings = new ArrayList<>();
-        this.role = role;
+        this.role = Role.USER.toString();
     }
 
     public User(Long id, String username, String password, String role) {

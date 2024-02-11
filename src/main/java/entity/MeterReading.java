@@ -1,5 +1,6 @@
 package entity;
 
+import com.fasterxml.jackson.annotation.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,11 +31,17 @@ public class MeterReading {
     /**
      * Дата подачи показаний счетчика.
      */
+    @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate localDate;
     /**
      * Пользователь, связанный с этими показаниями счетчика.
      */
+//    @JsonUnwrapped
     private User user;
+
+    public MeterReading() {
+        this.localDate = LocalDate.now();
+    }
 
     public MeterReading(TypeMeterReading type, BigDecimal reading) {
         this.type = type;

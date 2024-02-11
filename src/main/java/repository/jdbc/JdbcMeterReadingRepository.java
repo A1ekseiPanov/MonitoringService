@@ -21,11 +21,11 @@ public class JdbcMeterReadingRepository implements MeterReadingRepository {
     private final TypeMeterReadingRepository typeMeterReadingRepository;
 
     private static final String FIND_ALL_BY_USER_ID = """
-            SELECT id,type_id,reading,local_date,user_id FROM meter_readings WHERE user_id = ?""";
+            SELECT id,type_id,reading,local_date,user_id FROM dbo.meter_readings WHERE user_id = ?""";
     private static final String FIND_ALL = """
-            SELECT id,type_id,reading,local_date,user_id FROM meter_readings""";
+            SELECT id,type_id,reading,local_date,user_id FROM dbo.meter_readings""";
     private static final String CREATE = """
-            INSERT INTO meter_readings (type_id, reading, local_date, user_id)  values (?,?,?,?)""";
+            INSERT INTO dbo.meter_readings (type_id, reading, local_date, user_id)  values (?,?,?,?)""";
 
     /**
      * Возвращает список всех показаний счетчиков для пользователя с указанным идентификатором.

@@ -1,8 +1,8 @@
 package repository.jdbc;
 
+import repository.UserRepository;
 import entity.User;
 import exception.NotFoundException;
-import repository.UserRepository;
 import util.ConnectionUtil;
 
 import java.sql.*;
@@ -14,12 +14,12 @@ import java.util.Optional;
 public class JdbcUserRepository implements UserRepository {
 
     public static final String FIND_USER_BY_ID =
-            "SELECT id, username, password, role FROM users WHERE id = ?";
+            "SELECT id, username, password, role FROM dbo.users WHERE id = ?";
     public static final String FIND_USER_BY_USERNAME =
-            "SELECT id, username, password, role FROM users WHERE username = ?";
-    public static final String SAVE_USER = "INSERT INTO users (username, password, role) VALUES (?,?,?)";
+            "SELECT id, username, password, role FROM dbo.users WHERE username = ?";
+    public static final String SAVE_USER = "INSERT INTO dbo.users (username, password, role) VALUES (?,?,?)";
     public static final String UPDATE_USER =
-            "UPDATE users SET username = ?, password = ? WHERE id = ?";
+            "UPDATE dbo.users SET username = ?, password = ? WHERE id = ?";
 
     /**
      * Поиск пользователя по его идентификатору.

@@ -18,7 +18,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static util.TestData.*;
 
 class MeterReadingServiceTest {
@@ -36,31 +36,29 @@ class MeterReadingServiceTest {
     }
 
     @Test
-    @DisplayName("Получение истории показаний, если пользователь не вошел в систему")
-    void getReadingHistoryUserNotLoggedInTest() {
-        when(userService.getLoggedUser()).thenReturn(null);
-        assertThatThrownBy(() -> meterReadingService.getReadingHistory())
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("Пользователь не вошел в систему");
-    }
-
-    @Test
     @DisplayName("Получение истории показаний")
     void getReadingHistoryTest() {
-        when(meterReadingRepository
-                .findAllByUserId(USER1.getId())).thenReturn(METER_READINGS);
+        Long userId = USER1.getId();
+        List<MeterReading> expectedReadings = METER_READINGS;
+        when(userService.getById(userId)).thenReturn(USER1);
+        when(meterReadingRepository.findAllByUserId(userId)).thenReturn(expectedReadings);
 
-        assertThat(meterReadingService.getReadingHistory()).isEqualTo(METER_READINGS);
+        List<MeterReading> actualReadings = meterReadingService.getReadingHistory(userId);
+
+        assertThat(expectedReadings).isEqualTo(actualReadings);
+        verify(userService, times(1)).getById(userId);
+        verify(meterReadingRepository, times(1)).findAllByUserId(userId);
     }
 
     @Test
     @DisplayName("Получение истории показаний, если история пуста")
     void getReadingHistoryIsEmptyTest() {
-        when(userService.getLoggedUser()).thenReturn(USER1);
-        when(meterReadingRepository
-                .findAllByUserId(USER1.getId())).thenReturn(Collections.emptyList());
+        Long userId = USER1.getId();
 
-        assertThatThrownBy(() -> meterReadingService.getReadingHistory())
+        when(userService.getById(userId)).thenReturn(USER1);
+        when(meterReadingRepository.findAllByUserId(userId)).thenReturn(Collections.emptyList());
+
+        assertThatThrownBy(() -> meterReadingService.getReadingHistory(userId))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Показаний нет");
     }
@@ -73,20 +71,9 @@ class MeterReadingServiceTest {
 
         List<MeterReading> result = meterReadingService
                 .getAllMeterReadingsByMonth(LocalDate.now().getMonthValue(),
-                        LocalDate.now().getYear());
+                        LocalDate.now().getYear(), USER1.getId());
 
         assertThat(result).containsAnyElementsOf(METER_READINGS);
-    }
-
-    @Test
-    @DisplayName("Получение всех показаний счетчиков за указанный месяц, если пользователь не вошел в систему")
-    void getAllMeterReadingsByMonthUserNotLoggedInTest() {
-        when(userService.getLoggedUser()).thenReturn(null);
-
-        assertThatThrownBy(() -> {
-            meterReadingService.getAllMeterReadingsByMonth(MONTH, YEAR);
-        }).isInstanceOf(NotFoundException.class)
-                .hasMessage("Войдите в систему");
     }
 
     @Test
@@ -96,7 +83,7 @@ class MeterReadingServiceTest {
                 .thenReturn(Collections.emptyList());
 
         assertThatThrownBy(() -> {
-            meterReadingService.getAllMeterReadingsByMonth(MONTH, YEAR);
+            meterReadingService.getAllMeterReadingsByMonth(MONTH, YEAR, USER1.getId());
         }).isInstanceOf(NotFoundException.class)
                 .hasMessage("В данном месяце нет показаний");
     }
@@ -105,6 +92,6 @@ class MeterReadingServiceTest {
     @DisplayName("Подача показаний, если история пуста")
     void submitMeterReadingEmptyMeterReadings() {
         assertDoesNotThrow(() -> meterReadingService
-                .submitMeterReading(TYPE_METER_READING1, BigDecimal.valueOf(234)));
+                .submitMeterReading(TYPE_METER_READING1, BigDecimal.valueOf(234), USER1.getId()));
     }
 }

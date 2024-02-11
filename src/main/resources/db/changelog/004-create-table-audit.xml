@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd"
+        logicalFilePath="db/changelog.xml">
+    <changeSet id="004-create-table-audit" author="panov">
+        <createSequence schemaName="dbo" sequenceName="audit_seq" startValue="1" incrementBy="1"/>
+        <createTable schemaName="dbo" tableName="audit">
+            <column name="id" type="bigint" defaultValueComputed="nextval('dbo.audit_seq')">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="created_at" type="date" defaultValueDate="now()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="varchar(300)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>
