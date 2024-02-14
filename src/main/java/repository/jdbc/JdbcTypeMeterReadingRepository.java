@@ -13,18 +13,11 @@ import java.util.Optional;
  * Реализация репозитория для работы с типами счетчиков в базе данных с использованием JDBC.
  */
 public class JdbcTypeMeterReadingRepository implements TypeMeterReadingRepository {
-    private static final JdbcTypeMeterReadingRepository INSTANCE = new JdbcTypeMeterReadingRepository();
-    public static final String FIND_ALL_TYPES = "SELECT id, title FROM type_meter_readings";
-    public static final String CREATE_TYPE = "INSERT INTO type_meter_readings (title) VALUES (?)";
+
+    public static final String FIND_ALL_TYPES = "SELECT id, title FROM dbo.type_meter_readings";
+    public static final String CREATE_TYPE = "INSERT INTO dbo.type_meter_readings (title) VALUES (?)";
     public static final String FIND_TYPE_BY_ID =
-            "SELECT id, title FROM type_meter_readings WHERE id = ?";
-
-    private JdbcTypeMeterReadingRepository() {
-    }
-
-    public static JdbcTypeMeterReadingRepository getInstance() {
-        return INSTANCE;
-    }
+            "SELECT id, title FROM dbo.type_meter_readings WHERE id = ?";
 
     /**
      * Получает все типы показаний счетчиков из базы данных.
@@ -58,18 +51,38 @@ public class JdbcTypeMeterReadingRepository implements TypeMeterReadingRepositor
      */
     @Override
     public TypeMeterReading save(TypeMeterReading type) {
-        try (Connection connection = ConnectionUtil.get();
-             PreparedStatement preparedStatement = connection.prepareStatement(CREATE_TYPE, Statement.RETURN_GENERATED_KEYS)) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            connection = ConnectionUtil.get();
+            preparedStatement = connection.prepareStatement(CREATE_TYPE, Statement.RETURN_GENERATED_KEYS);
+            connection.setAutoCommit(false);
             preparedStatement.setString(1, type.getTitle());
             preparedStatement.executeUpdate();
+            connection.commit();
             ResultSet key = preparedStatement.getGeneratedKeys();
             while (key.next()) {
                 type.setId(key.getLong("id"));
             }
-            return type;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            if (connection != null) {
+                try {
+                    connection.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                throw new RuntimeException(e);
+            }
+        } finally {
+            if (preparedStatement != null) {
+                try {
+                    preparedStatement.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
+        return type;
     }
 
     /**

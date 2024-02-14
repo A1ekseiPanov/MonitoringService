@@ -1,50 +1,15 @@
 package repository.jdbc;
 
 import entity.User;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.PostgreSQLContainer;
-import util.LiquibaseUtil;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static util.TestData.*;
 
 
-class JdbcUserRepositoryTest {
-    private static Connection connection;
-    private static JdbcUserRepository userRepository;
-
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
-            "postgres:14.7-alpine")
-            .withDatabaseName("test")
-            .withUsername("test")
-            .withPassword("test");
-
-    @BeforeAll
-    static void beforeAll() throws SQLException {
-        postgres.start();
-        connection = DriverManager.getConnection(
-                postgres.getJdbcUrl(),
-                postgres.getUsername(),
-                postgres.getPassword());
-
-        userRepository = JdbcUserRepository.getInstance();
-        LiquibaseUtil.update(connection);
-    }
-
-    @AfterAll
-    static void afterAll() throws SQLException {
-        postgres.stop();
-        connection.close();
-    }
-
-
+class JdbcUserRepositoryTest extends TestcontainersAbstract {
     @Test
     void saveAndGetByUsernameTest() {
         User saveUser = userRepository.save(NEW_USER,connection);

@@ -1,10 +1,15 @@
 package service;
 
-import entity.User;
+import annotations.Audit;
 import exception.InputDataConflictException;
-import exception.NotFoundException;
+import exception.ValidationException;
+import mapper.UserMapper;
 import repository.UserRepository;
-import repository.jdbc.JdbcUserRepository;
+import entity.dto.UserDto;
+import entity.User;
+import exception.NotFoundException;
+import validator.UserRegisterValidator;
+import validator.ValidatorResult;
 import util.AuditLog;
 
 import java.util.Optional;
@@ -13,17 +18,16 @@ import java.util.Optional;
  * Класс UserService предоставляет методы для работы с пользователями в системе.
  * Он обеспечивает функции регистрации, входа и выхода пользователя.
  */
+@Audit
 public class UserService {
     private User registeredUser;
-    private UserRepository userRepository;
-    private static UserService INSTANCE = new UserService();
+    private final UserRepository userRepository;
+    private final UserRegisterValidator userRegisterValidator;
+    private final UserMapper mapper = UserMapper.INSTANCE;
 
-    private UserService() {
-        this.userRepository = JdbcUserRepository.getInstance();
-    }
-
-    public static UserService getInstance() {
-        return INSTANCE;
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+        this.userRegisterValidator = UserRegisterValidator.getInstance();
     }
 
     /**
@@ -35,10 +39,15 @@ public class UserService {
      */
     public void register(String username, String password) {
         Optional<User> currentUser = userRepository.findByUsername(username);
-        if (currentUser.isPresent() && currentUser.get().getPassword().equals(password)) {
+        UserDto userDto = new UserDto(username, password);
+        ValidatorResult validatorResult = userRegisterValidator.isValid(userDto);
+        if (!validatorResult.isValid()) {
+            throw new ValidationException(validatorResult.getErrors());
+        }
+        if (currentUser.isPresent() || currentUser.get().getUsername().equals(username)) {
             throw new InputDataConflictException("Такой пользователь уже существует");
         } else {
-            userRepository.save(new User(username, password));
+            userRepository.save(mapper.userDtoToUser(userDto));
             AuditLog.logAction("Пользователь username(" + username + ") успешно зарегистрировался");
         }
     }
@@ -51,17 +60,15 @@ public class UserService {
      * @throws InputDataConflictException если пользователь уже вошел в систему
      * @throws IllegalArgumentException   если указаны неверное имя пользователя или пароль
      */
-    public void login(String username, String password) {
+    public User login(String username, String password) {
         Optional<User> currentUser = userRepository.findByUsername(username);
         User loggedUser = getLoggedUser();
         if (loggedUser != null && loggedUser.getUsername().equals(username) && loggedUser.getPassword().equals(password)) {
             throw new InputDataConflictException("Вы уже выполнили вход");
-        } else if (loggedUser != null) {
-            throw new InputDataConflictException("Нельзя войти пока есть залогиненый пользователь: username(" + getLoggedUser().getUsername() + ")");
         }
         if (currentUser.isPresent() && currentUser.get().getPassword().equals(password)) {
-            registeredUser = currentUser.get();
             AuditLog.logAction("Пользователь username(" + username + ") вошел в систему");
+            return registeredUser = currentUser.get();
         } else {
             throw new IllegalArgumentException("Неверное имя пользователя или пароль. Ошибка входа.");
         }
@@ -79,6 +86,11 @@ public class UserService {
         } else {
             throw new NotFoundException("В данный момент ни один пользователь не вошел в систему.");
         }
+    }
+
+    public User getById(Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new NotFoundException(
+                String.format("Пользователь с id:%s не найден", id)));
     }
 
     /**

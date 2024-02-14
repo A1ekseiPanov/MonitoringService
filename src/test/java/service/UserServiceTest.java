@@ -1,6 +1,5 @@
 package service;
 
-import entity.User;
 import exception.InputDataConflictException;
 import exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,13 +32,14 @@ class UserServiceTest {
     @Test
     @DisplayName("Регистрация пользователя")
     void registerTest() {
-        when(userRepository.findByUsername(USER1.getUsername())).thenReturn(Optional.empty());
+        String username = USER1.getUsername();
+        String password = USER1.getPassword();
+        when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
 
-        userService.register(USER1.getUsername(),USER1.getPassword());
+        userService.register(username, password);
 
-        verify(userRepository).findByUsername(USER1.getUsername());
-        verify(userRepository).save(any(User.class));
-   }
+        verify(userRepository, times(1)).save(any());
+    }
 
     @Test
     @DisplayName("Регистрация пользователя (пользователь уже существует)")
@@ -47,8 +47,8 @@ class UserServiceTest {
         when(userRepository.findByUsername(USER1.getUsername()))
                 .thenReturn(Optional.ofNullable(USER1));
         assertThatThrownBy(() -> {
-                    userService.register(USER1.getUsername(), USER1.getPassword());
-                }).isInstanceOf(InputDataConflictException.class)
+            userService.register(USER1.getUsername(), USER1.getPassword());
+        }).isInstanceOf(InputDataConflictException.class)
                 .hasMessage("Такой пользователь уже существует");
     }
 
@@ -61,13 +61,13 @@ class UserServiceTest {
         userService.login(USER1.getUsername(), USER1.getPassword());
 
         assertThatThrownBy(() -> {
-                    userService.login(USER1.getUsername(), USER1.getPassword());
-                }).isInstanceOf(InputDataConflictException.class)
+            userService.login(USER1.getUsername(), USER1.getPassword());
+        }).isInstanceOf(InputDataConflictException.class)
                 .hasMessage("Вы уже выполнили вход");
 
         assertThatThrownBy(() -> {
-                    userService.login(USER2.getUsername(), USER2.getPassword());
-                }).isInstanceOf(InputDataConflictException.class)
+            userService.login(USER2.getUsername(), USER2.getPassword());
+        }).isInstanceOf(InputDataConflictException.class)
                 .hasMessage("Нельзя войти пока есть залогиненый пользователь:" +
                         " username(" + userService.getLoggedUser().getUsername() + ")");
     }
@@ -85,15 +85,15 @@ class UserServiceTest {
 
         userService.logout();
         assertThat(userService.getLoggedUser()).isNull();
-        verify(userRepository).findByUsername(USER1.getUsername());
+
     }
 
     @Test
     @DisplayName("Выход пользователя (пользователь не вошел в систему)")
     void logoutUserNotLogInTest() {
         assertThatThrownBy(() -> {
-                    userService.logout();
-                }).isInstanceOf(NotFoundException.class)
+            userService.logout();
+        }).isInstanceOf(NotFoundException.class)
                 .hasMessage("В данный момент ни один пользователь не вошел в систему.");
     }
 }

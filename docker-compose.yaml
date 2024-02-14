@@ -7,5 +7,5 @@ services:
       POSTGRES_USER: username
       POSTGRES_PASSWORD: password
     ports:
-      - "15432:5432"
+      - "5432:5432"
     restart: unless-stopped
