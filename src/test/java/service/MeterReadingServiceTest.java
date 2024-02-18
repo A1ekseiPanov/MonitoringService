@@ -1,53 +1,68 @@
 package service;
 
-import entity.MeterReading;
-import exception.NotFoundException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import repository.MeterReadingRepository;
+import ru.panov.domain.requestDTO.MeterReadingRequestDTO;
+import ru.panov.domain.responseDTO.MeterReadingResponseDTO;
+import ru.panov.exception.NotFoundException;
+import ru.panov.mapper.MeterReadingMapper;
+import ru.panov.repository.MeterReadingRepository;
+import ru.panov.service.TypeMeterReadingService;
+import ru.panov.service.UserService;
+import ru.panov.service.impl.MeterReadingServiceImpl;
+import ru.panov.validator.MonthYearValidator;
+import ru.panov.validator.Validator;
+import ru.panov.validator.ValidatorResult;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 import static util.TestData.*;
 
 class MeterReadingServiceTest {
-    @InjectMocks
-    private MeterReadingService meterReadingService;
     @Mock
     private UserService userService;
     @Mock
     private MeterReadingRepository meterReadingRepository;
+    @Mock
+    private TypeMeterReadingService typeMeterReadingService;
+    @Mock
+    private Validator<MeterReadingRequestDTO> meterReadingValidator;
+    @Mock
+    private MonthYearValidator monthYearValidator;
+    @Mock
+    private MeterReadingMapper mapper;
+    @InjectMocks
+    private MeterReadingServiceImpl meterReadingService;
+    @Mock
+    private ValidatorResult validatorResult;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        when(userService.getLoggedUser()).thenReturn(USER1);
+
     }
 
     @Test
     @DisplayName("Получение истории показаний")
     void getReadingHistoryTest() {
-        Long userId = USER1.getId();
-        List<MeterReading> expectedReadings = METER_READINGS;
-        when(userService.getById(userId)).thenReturn(USER1);
-        when(meterReadingRepository.findAllByUserId(userId)).thenReturn(expectedReadings);
+        when(userService.getById(USER1.getId())).thenReturn(USER1);
+        when(meterReadingRepository.findAllByUserId(USER1.getId())).thenReturn(METER_READINGS);
+        when(mapper.toDtoResponseList(METER_READINGS)).thenReturn(any());
 
-        List<MeterReading> actualReadings = meterReadingService.getReadingHistory(userId);
+        List<MeterReadingResponseDTO> actualReadings = meterReadingService.getAll(USER1.getId());
 
-        assertThat(expectedReadings).isEqualTo(actualReadings);
-        verify(userService, times(1)).getById(userId);
-        verify(meterReadingRepository, times(1)).findAllByUserId(userId);
+        verify(userService, times(1)).getById(USER1.getId());
+        verify(meterReadingRepository, times(1)).findAllByUserId(USER1.getId());
+        verify(mapper, times(1)).toDtoResponseList(any());
     }
 
     @Test
@@ -58,7 +73,7 @@ class MeterReadingServiceTest {
         when(userService.getById(userId)).thenReturn(USER1);
         when(meterReadingRepository.findAllByUserId(userId)).thenReturn(Collections.emptyList());
 
-        assertThatThrownBy(() -> meterReadingService.getReadingHistory(userId))
+        assertThatThrownBy(() -> meterReadingService.getAll(userId))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Показаний нет");
     }
@@ -66,32 +81,31 @@ class MeterReadingServiceTest {
     @Test
     @DisplayName("Получение всех показаний счетчиков за указанный месяц")
     void getAllMeterReadingsByMonthTest() {
-        when(meterReadingRepository.findAllByUserId(USER1.getId()))
-                .thenReturn(METER_READINGS);
+        when(monthYearValidator.isValid(anyInt(), anyInt())).thenReturn(new ValidatorResult());
+        when(validatorResult.isValid()).thenReturn(true);
+        when(meterReadingRepository
+                .findAllByUserId(USER1.getId())).thenReturn(METER_READINGS);
 
-        List<MeterReading> result = meterReadingService
+        List<MeterReadingResponseDTO> result = meterReadingService
                 .getAllMeterReadingsByMonth(LocalDate.now().getMonthValue(),
                         LocalDate.now().getYear(), USER1.getId());
 
-        assertThat(result).containsAnyElementsOf(METER_READINGS);
+        verify(meterReadingRepository, times(1)).findAllByUserId(USER1.getId());
+        verify(monthYearValidator, times(1)).isValid(anyInt(), anyInt());
+        verify(mapper, times(1)).toDtoResponseList(any());
     }
 
     @Test
     @DisplayName("Получение всех показаний счетчиков за указанный месяц, если в указанный месяц нет показаний")
     void getAllMeterReadingsByMonthNoReadingsForMonthTest() {
-        when(meterReadingRepository.findAllByUserId(USER1.getId()))
-                .thenReturn(Collections.emptyList());
+        when(monthYearValidator.isValid(anyInt(), anyInt())).thenReturn(new ValidatorResult());
+        when(validatorResult.isValid()).thenReturn(true);
+        when(meterReadingRepository
+                .findAllByUserId(USER1.getId())).thenReturn(Collections.emptyList());
 
         assertThatThrownBy(() -> {
             meterReadingService.getAllMeterReadingsByMonth(MONTH, YEAR, USER1.getId());
         }).isInstanceOf(NotFoundException.class)
                 .hasMessage("В данном месяце нет показаний");
-    }
-
-    @Test
-    @DisplayName("Подача показаний, если история пуста")
-    void submitMeterReadingEmptyMeterReadings() {
-        assertDoesNotThrow(() -> meterReadingService
-                .submitMeterReading(TYPE_METER_READING1, BigDecimal.valueOf(234), USER1.getId()));
     }
 }

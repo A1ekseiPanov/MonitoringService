@@ -1,9 +1,10 @@
 package util;
 
-import entity.MeterReading;
-import entity.Role;
-import entity.TypeMeterReading;
-import entity.User;
+import ru.panov.domain.model.MeterReading;
+import ru.panov.domain.model.Role;
+import ru.panov.domain.model.TypeMeterReading;
+import ru.panov.domain.model.User;
+import ru.panov.domain.responseDTO.MeterReadingResponseDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -29,6 +30,9 @@ public class TestData {
 
     public static final List<MeterReading> METER_READINGS = List.of(METER_READING1, METER_READING2, METER_READING3, METER_READING4, METER_READING5);
     public static final List<MeterReading> LAST_METER_READINGS = List.of(METER_READING1, METER_READING2, METER_READING3);
+
+    public static final MeterReadingResponseDTO METER_READING1_RESPONSE_DTO = new MeterReadingResponseDTO(1L, TYPE_METER_READING1.getTitle(), BigDecimal.valueOf(222), LocalDate.now());
+    public static final List<MeterReadingResponseDTO> METER_READINGS_RESPONSE = List.of(METER_READING1_RESPONSE_DTO);
     public static final int MONTH = 1;
     public static final Long ADMIN_ID = 1L;
     public static final int YEAR = 2024;

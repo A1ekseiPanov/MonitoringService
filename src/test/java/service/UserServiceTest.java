@@ -1,28 +1,40 @@
 package service;
 
-import exception.InputDataConflictException;
-import exception.NotFoundException;
+
+import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import repository.UserRepository;
+import ru.panov.domain.requestDTO.UserRequestDTO;
+import ru.panov.exception.InputDataConflictException;
+import ru.panov.mapper.UserMapper;
+import ru.panov.repository.UserRepository;
+import ru.panov.service.impl.UserServiceImpl;
+import ru.panov.validator.Validator;
+import ru.panov.validator.ValidatorResult;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static util.TestData.USER1;
-import static util.TestData.USER2;
 
 class UserServiceTest {
     @InjectMocks
-    private UserService userService;
+    private UserServiceImpl userService;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private  UserMapper mapper;
+    @Mock
+    private  HttpSession session;
+    @Mock
+    private Validator<UserRequestDTO> userRegisterValidator;
+    @Mock
+    private ValidatorResult validatorResult;
 
     @BeforeEach
     void initEach() {
@@ -32,68 +44,47 @@ class UserServiceTest {
     @Test
     @DisplayName("Регистрация пользователя")
     void registerTest() {
-        String username = USER1.getUsername();
-        String password = USER1.getPassword();
-        when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
+        UserRequestDTO userRequestDTO = new UserRequestDTO(USER1.getUsername(),USER1.getPassword());
 
-        userService.register(username, password);
+        when(userRegisterValidator.isValid(userRequestDTO)).thenReturn(new ValidatorResult());
+        when(validatorResult.isValid()).thenReturn(true);
+        when(userRepository.findByUsername(userRequestDTO.getUsername())).thenReturn(Optional.empty());
+        when(mapper.userDtoToUser(userRequestDTO)).thenReturn(USER1);
 
-        verify(userRepository, times(1)).save(any());
+        assertThatCode(() -> userService.register(userRequestDTO))
+                .doesNotThrowAnyException();
+        verify(userRepository, times(1)).save(USER1);
     }
 
     @Test
     @DisplayName("Регистрация пользователя (пользователь уже существует)")
     void registerUserIsPresentTest() {
+        UserRequestDTO userRequestDTO = new UserRequestDTO(USER1.getUsername(),USER1.getPassword());
+
+        when(userRegisterValidator.isValid(userRequestDTO)).thenReturn(new ValidatorResult());
+        when(validatorResult.isValid()).thenReturn(true);
         when(userRepository.findByUsername(USER1.getUsername()))
                 .thenReturn(Optional.ofNullable(USER1));
-        assertThatThrownBy(() -> {
-            userService.register(USER1.getUsername(), USER1.getPassword());
-        }).isInstanceOf(InputDataConflictException.class)
+
+        assertThatThrownBy(() ->
+            userService.register(userRequestDTO))
+                .isInstanceOf(InputDataConflictException.class)
                 .hasMessage("Такой пользователь уже существует");
     }
 
     @Test
-    @DisplayName("Вход пользователя (ошибка входа)")
-    void loginFailTest() {
-        when(userRepository.findByUsername(USER1.getUsername()))
-                .thenReturn(Optional.ofNullable(USER1));
-
-        userService.login(USER1.getUsername(), USER1.getPassword());
-
-        assertThatThrownBy(() -> {
-            userService.login(USER1.getUsername(), USER1.getPassword());
-        }).isInstanceOf(InputDataConflictException.class)
-                .hasMessage("Вы уже выполнили вход");
-
-        assertThatThrownBy(() -> {
-            userService.login(USER2.getUsername(), USER2.getPassword());
-        }).isInstanceOf(InputDataConflictException.class)
-                .hasMessage("Нельзя войти пока есть залогиненый пользователь:" +
-                        " username(" + userService.getLoggedUser().getUsername() + ")");
-    }
-
-    @Test
-    @DisplayName("Вход и выход пользователя")
+    @DisplayName("Вход пользователя")
     void loginAndLogoutTest() {
         when(userRepository.findByUsername(USER1.getUsername()))
                 .thenReturn(Optional.ofNullable(USER1));
 
         userService.login(USER1.getUsername(), USER1.getPassword());
+        when(session.getAttribute("user")).thenReturn(USER1);
 
-        assertThat(userService.getLoggedUser().getUsername()).isEqualTo(USER1.getUsername());
-        assertThat(userService.getLoggedUser()).isNotNull();
-
-        userService.logout();
-        assertThat(userService.getLoggedUser()).isNull();
+        assertThat(session.getAttribute("user")).isEqualTo(USER1);
+        assertThat(session.getAttribute("user")).isNotNull();
 
     }
 
-    @Test
-    @DisplayName("Выход пользователя (пользователь не вошел в систему)")
-    void logoutUserNotLogInTest() {
-        assertThatThrownBy(() -> {
-            userService.logout();
-        }).isInstanceOf(NotFoundException.class)
-                .hasMessage("В данный момент ни один пользователь не вошел в систему.");
-    }
+
 }

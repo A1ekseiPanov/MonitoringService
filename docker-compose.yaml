@@ -1,11 +1,29 @@
 version: '3.8'
 
 services:
-  service-db:
+  db:
     image: postgres:14.7-alpine
     environment:
       POSTGRES_USER: username
       POSTGRES_PASSWORD: password
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
-    restart: unless-stopped
+    restart: always
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  tomcat:
+    image: tomcat:10.1.18
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./target/Monitoring-Service-1.0.war:/usr/local/tomcat/webapps/.war
+    depends_on:
+      - db
+    links:
+      - db
+    environment:
+      restart: always
+      DATASOURCE_URL: jdbc:postgresql://db:5432/postgres
+volumes:
+  pgdata:

@@ -1,7 +1,9 @@
 package repository.jdbc;
 
-import entity.User;
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import ru.panov.domain.model.User;
 
 import java.util.Optional;
 
@@ -11,28 +13,31 @@ import static util.TestData.*;
 
 class JdbcUserRepositoryTest extends TestcontainersAbstract {
     @Test
+    @DisplayName("Сохранение и получение пользователя по имени пользователя")
     void saveAndGetByUsernameTest() {
-        User saveUser = userRepository.save(NEW_USER,connection);
-        Optional<User> user = userRepository.findByUsername(NEW_USER.getUsername(),connection);
+        User saveUser = userRepository.save(NEW_USER);
+        Optional<User> user = userRepository.findByUsername(NEW_USER.getUsername());
 
         assertThat(user).isNotNull();
         user.ifPresent(u -> assertThat(u).isEqualTo(saveUser));
     }
 
     @Test
+    @DisplayName("Поиск пользователя по несуществующему имени пользователя")
     void findByUsernameNonExistentTest() {
-        Optional<User> retrievedUser = userRepository.findByUsername("not found",connection);
+        Optional<User> retrievedUser = userRepository.findByUsername("not found");
         assertThat(retrievedUser).isEmpty();
     }
 
     @Test
+    @DisplayName("Обновление пользователя")
     void updateTest() {
-       User user = userRepository.findByUsername(USER1.getUsername(),connection).orElse(null);
+       User user = userRepository.findByUsername(USER1.getUsername()).orElse(null);
        User updated = UPDATED_USER;
         updated.setId(user.getId());
 
-        User updatedUser = userRepository.update(user.getId(),updated,connection);
-        Optional<User> retrievedUser = userRepository.findByUsername(UPDATED_USER.getUsername(),connection);
+        User updatedUser = userRepository.update(user.getId(),updated);
+        Optional<User> retrievedUser = userRepository.findByUsername(UPDATED_USER.getUsername());
 
         retrievedUser.ifPresent(u -> {
             assertThat(u).isEqualTo(updatedUser);
@@ -41,16 +46,17 @@ class JdbcUserRepositoryTest extends TestcontainersAbstract {
     }
 
     @Test
+    @DisplayName("Поиск пользователя по идентификатору")
     void findByIdTest() {
-
-        Optional<User> retrievedUser = userRepository.findById(USER2.getId(),connection);
+        Optional<User> retrievedUser = userRepository.findById(USER2.getId());
 
         retrievedUser.ifPresent(u -> assertThat(u).isEqualTo(USER2));
     }
 
     @Test
+    @DisplayName("Поиск пользователя по несуществующему идентификатору")
     void findByIdNonExistentTest() {
-        Optional<User> retrievedUser = userRepository.findById(123L,connection);
+        Optional<User> retrievedUser = userRepository.findById(123L);
 
         assertThat(retrievedUser).isEmpty();
     }
