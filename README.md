@@ -53,3 +53,4 @@ Monitoring Service - это приложение для для подачи по
 -----------------------------
 
 ДЗ №3: https://github.com/A1ekseiPanov/MonitoringService/pull/3
+ДЗ №4: https://github.com/A1ekseiPanov/MonitoringService/pull/4
