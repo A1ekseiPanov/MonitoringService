@@ -48,6 +48,7 @@
         <insert schemaName="dbo" tableName="meter_readings">
             <column name="type_id" value="1"/>
             <column name="reading" value="333"/>
+            <column name="local_date" value="2024-01-04"/>
             <column name="user_id" value="3"/>
         </insert>
         <insert schemaName="dbo" tableName="meter_readings">

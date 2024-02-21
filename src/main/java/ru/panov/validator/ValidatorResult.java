@@ -1,0 +1,19 @@
+package ru.panov.validator;
+
+import lombok.Getter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Getter
+public class ValidatorResult {
+    private final List<Error> errors = new ArrayList<>();
+
+    public void add(Error error) {
+        this.errors.add(error);
+    }
+
+    public boolean isValid() {
+        return errors.isEmpty();
+    }
+}
