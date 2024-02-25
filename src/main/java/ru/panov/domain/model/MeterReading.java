@@ -21,9 +21,9 @@ public class MeterReading {
      */
     private Long id;
     /**
-     * Тип счетчика.
+     * Идентификатор типа счетчика.
      */
-    private TypeMeterReading type;
+    private Long typeId;
     /**
      * Показания счетчика.
      */
@@ -34,29 +34,29 @@ public class MeterReading {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate localDate;
     /**
-     * Пользователь, связанный с этими показаниями счетчика.
+     * Идентификатор пользователя, связанного с этими показаниями счетчика.
      */
-    private User user;
+    private Long userId;
 
     public MeterReading() {
         this.localDate = LocalDate.now();
     }
 
-    public MeterReading(TypeMeterReading type, BigDecimal reading) {
-        this.type = type;
+    public MeterReading(long typeId, BigDecimal reading) {
+        this.typeId = typeId;
         this.reading = reading;
         this.localDate = LocalDate.now();
     }
 
-    public MeterReading(TypeMeterReading type, BigDecimal reading, LocalDate localDate) {
-        this.type = type;
+    public MeterReading(long typeId, BigDecimal reading, LocalDate localDate) {
+        this.typeId = typeId;
         this.reading = reading;
         this.localDate = localDate;
     }
 
     @Override
     public String toString() {
-        return "счетчик: " + type.getTitle() +
+        return "счетчик: " + typeId +
                 ", показания: " + reading +
                 ", дата подачи показаний: " + localDate;
     }

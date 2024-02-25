@@ -1,7 +1,9 @@
-db:
-  classname: org.postgresql.Driver
-  url: jdbc:postgresql://db:5432/postgres
-  username: username
-  password: password
-lb:
-  change_log_file: classpath:db/changelog/changelog.xml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:15432/postgres
+    username: username
+    password: password
+    driver-class-name: org.postgresql.Driver
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/changelog.xml

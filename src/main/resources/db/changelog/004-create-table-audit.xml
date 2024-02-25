@@ -14,7 +14,7 @@
             <column name="created_at" type="date" defaultValueDate="now()">
                 <constraints nullable="false"/>
             </column>
-            <column name="message" type="varchar(300)">
+            <column name="message" type="text">
                 <constraints nullable="false"/>
             </column>
         </createTable>

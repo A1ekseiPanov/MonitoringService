@@ -3,7 +3,10 @@ package repository.jdbc;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import ru.panov.domain.model.User;
+import ru.panov.repository.UserRepository;
+import util.TestcontainersAbstract;
 
 import java.util.Optional;
 
@@ -12,6 +15,9 @@ import static util.TestData.*;
 
 
 class JdbcUserRepositoryTest extends TestcontainersAbstract {
+    @Autowired
+    private UserRepository userRepository;
+
     @Test
     @DisplayName("Сохранение и получение пользователя по имени пользователя")
     void saveAndGetByUsernameTest() {
@@ -32,11 +38,11 @@ class JdbcUserRepositoryTest extends TestcontainersAbstract {
     @Test
     @DisplayName("Обновление пользователя")
     void updateTest() {
-       User user = userRepository.findByUsername(USER1.getUsername()).orElse(null);
-       User updated = UPDATED_USER;
+        User user = userRepository.findByUsername(USER1.getUsername()).orElse(null);
+        User updated = UPDATED_USER;
         updated.setId(user.getId());
 
-        User updatedUser = userRepository.update(user.getId(),updated);
+        User updatedUser = userRepository.update(user.getId(), updated);
         Optional<User> retrievedUser = userRepository.findByUsername(UPDATED_USER.getUsername());
 
         retrievedUser.ifPresent(u -> {

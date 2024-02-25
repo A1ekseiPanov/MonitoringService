@@ -1,28 +1,39 @@
 package ru.panov.config;
 
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Info;
-import org.springdoc.core.models.GroupedOpenApi;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.info.Contact;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springframework.context.annotation.Configuration;
 
-
+/**
+ * Конфигурация Swagger.
+ */
 @Configuration
-@ConditionalOnProperty(name = "springdoc.swagger-ui.enabled", havingValue = "true")
+@SecurityScheme(
+        name = "basicAuth",
+        type = SecuritySchemeType.HTTP,
+        scheme = "basic"
+)
+@OpenAPIDefinition(
+        info = @Info(
+                title = "Monitoring Service Api",
+                description = """
+                        Monitoring Service API
+                        <p><b>Тестовые данные:</b><br>
+                        - admin: admin / admin<br>
+                        - user: user1 / user1<br>
+                        - user: user2 / user2</p>
+                        """,
+                version = "1.0.0",
+                contact = @Contact(
+                        name = "Aleksey Panov",
+                        email = "evil199315@yandex.ru"
+                )
+        ),
+        security = @SecurityRequirement(name = "basicAuth")
+)
 public class SwaggerConfig {
-    @Bean
-    public GroupedOpenApi publicApi() {
-        return GroupedOpenApi.builder()
-                .group("public")
-                .pathsToMatch("/public/**")
-                .build();
-    }
-
-    @Bean
-    public OpenAPI springMSOpenAPI() {
-        return new OpenAPI()
-                .info(new Info().title("Monitoring Service API")
-                        .description("Monitoring service"));
-    }
 }

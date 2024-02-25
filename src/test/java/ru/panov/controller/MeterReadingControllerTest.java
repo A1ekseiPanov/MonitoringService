@@ -1,92 +1,100 @@
 package ru.panov.controller;
 
-import org.junit.jupiter.api.BeforeEach;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import ru.panov.domain.responseDTO.UserResponseDTO;
+import ru.panov.MonitoringServiceApp;
 import ru.panov.service.MeterReadingService;
+import ru.panov.service.TypeMeterReadingService;
 
 import java.util.Collections;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static util.TestData.MONTH;
-import static util.TestData.YEAR;
+import static ru.panov.controller.MeterReadingController.*;
+import static util.TestData.*;
 
+@SpringBootTest(classes = MonitoringServiceApp.class)
+@AutoConfigureMockMvc
 class MeterReadingControllerTest {
-    @Mock
+    @MockBean
     private MeterReadingService meterReadingService;
-
+    @MockBean
+    private TypeMeterReadingService typeMeterReadingService;
+    @Autowired
     private MockMvc mockMvc;
 
-    private MeterReadingController meterReadingController;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        meterReadingController = new MeterReadingController(meterReadingService);
-        mockMvc = MockMvcBuilders.standaloneSetup(meterReadingController).build();
-    }
     @Test
     @DisplayName("Тест получения всех показаний счетчиков")
+    @WithUserDetails(value = "admin")
     void getAllMeterReadingTest() throws Exception {
-        UserResponseDTO user = new UserResponseDTO(1L, "username");
-        when(meterReadingService.getAll(user.getId())).thenReturn(Collections.emptyList());
-
-        mockMvc.perform(get("/meter_readings")
-                        .sessionAttr("user", user))
+        mockMvc.perform(get(METER_READING_PATH))
                 .andExpect(status().isOk());
 
-        verify(meterReadingService, times(1)).getAll(user.getId());
+        verify(meterReadingService, times(1)).getAll(ADMIN.getId());
     }
 
     @Test
     @DisplayName("Тест отправки показаний счетчика")
+    @WithUserDetails(value = "user2")
     void submitMeterReadingTest() throws Exception {
-        UserResponseDTO user = new UserResponseDTO(1L, "username");
+        String json = objectMapper.writeValueAsString(METER_READING1_REQUEST_DTO);
 
-        mockMvc.perform(post("/meter_readings")
+        mockMvc.perform(post(METER_READING_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}")
-                        .sessionAttr("user", user))
+                        .content(json))
                 .andExpect(status().isCreated());
 
-        verify(meterReadingService, times(1)).submitMeterReading(any(), eq(user.getId()));
+        verify(meterReadingService, times(1)).submitMeterReading(any(), eq(USER2.getId()));
+    }
+
+    @Test
+    @DisplayName("Тест отправки показаний счетчика админом")
+    @WithUserDetails(value = "admin")
+    void submitMeterReadingAccessDeniedExceptionTest() throws Exception {
+        String json = objectMapper.writeValueAsString(METER_READING1_REQUEST_DTO);
+
+        mockMvc.perform(post(METER_READING_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof AccessDeniedException));
     }
 
     @Test
     @DisplayName("Тест получения последних показаний счетчиков")
+    @WithUserDetails(value = "user2")
     void getLastMeterReadingTest() throws Exception {
-        UserResponseDTO user = new UserResponseDTO(1L, "username");
-        when(meterReadingService.getLatest(user.getId())).thenReturn(Collections.emptyList());
-
-        mockMvc.perform(get("/meter_readings/last")
-                        .sessionAttr("user", user))
+        mockMvc.perform(get(METER_READING_PATH + METER_READING_LSAT_PATH))
                 .andExpect(status().isOk());
 
-        verify(meterReadingService, times(1)).getLatest(user.getId());
+        verify(meterReadingService, times(1)).getLatest(USER2.getId());
     }
 
     @Test
-    @DisplayName("Тест получения всех показаний счетчиков за указанный месяц и год")
-    void getAllMeterReadingsByMonthTest() throws Exception {
-        UserResponseDTO user = new UserResponseDTO(1L, "username");
-        when(meterReadingService.getAllMeterReadingsByMonth(MONTH, YEAR, user.getId()))
-                .thenReturn(Collections.emptyList());
+    @DisplayName("Тест добавления нового типа счетчика")
+    @WithUserDetails(value = "admin")
+    void addingTypeTest() throws Exception {
+        String json = objectMapper.writeValueAsString(NEW_TYPE_METER_READING_REQUEST_DTO);
 
-        mockMvc.perform(get("/meter_readings/date")
-                        .param("month", String.valueOf(MONTH))
-                        .param("year", String.valueOf(YEAR))
-                        .sessionAttr("user", user))
-                .andExpect(status().isOk());
+        mockMvc.perform(post(METER_READING_PATH + METER_READING_TYPES_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated());
 
-        verify(meterReadingService, times(1)).getAllMeterReadingsByMonth(MONTH, YEAR, user.getId());
+        verify(typeMeterReadingService, times(1)).addingType(any());
     }
 }

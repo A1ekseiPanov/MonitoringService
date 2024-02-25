@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import ru.panov.domain.requestDTO.MeterReadingRequestDTO;
 import ru.panov.domain.responseDTO.MeterReadingResponseDTO;
 import ru.panov.exception.NotFoundException;
 import ru.panov.mapper.MeterReadingMapper;
@@ -15,11 +14,7 @@ import ru.panov.repository.MeterReadingRepository;
 import ru.panov.service.TypeMeterReadingService;
 import ru.panov.service.UserService;
 import ru.panov.service.impl.MeterReadingServiceImpl;
-import ru.panov.validator.MonthYearValidator;
-import ru.panov.validator.Validator;
-import ru.panov.validator.ValidatorResult;
 
-import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,20 +30,13 @@ class MeterReadingServiceTest {
     @Mock
     private TypeMeterReadingService typeMeterReadingService;
     @Mock
-    private Validator<MeterReadingRequestDTO> meterReadingValidator;
-    @Mock
-    private MonthYearValidator monthYearValidator;
-    @Mock
     private MeterReadingMapper mapper;
     @InjectMocks
     private MeterReadingServiceImpl meterReadingService;
-    @Mock
-    private ValidatorResult validatorResult;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-
     }
 
     @Test
@@ -81,30 +69,24 @@ class MeterReadingServiceTest {
     @Test
     @DisplayName("Получение всех показаний счетчиков за указанный месяц")
     void getAllMeterReadingsByMonthTest() {
-        when(monthYearValidator.isValid(anyInt(), anyInt())).thenReturn(new ValidatorResult());
-        when(validatorResult.isValid()).thenReturn(true);
         when(meterReadingRepository
                 .findAllByUserId(USER1.getId())).thenReturn(METER_READINGS);
 
         List<MeterReadingResponseDTO> result = meterReadingService
-                .getAllMeterReadingsByMonth(LocalDate.now().getMonthValue(),
-                        LocalDate.now().getYear(), USER1.getId());
+                .getAllMeterReadingsByMonth(1, 2024, USER1.getId());
 
         verify(meterReadingRepository, times(1)).findAllByUserId(USER1.getId());
-        verify(monthYearValidator, times(1)).isValid(anyInt(), anyInt());
         verify(mapper, times(1)).toDtoResponseList(any());
     }
 
     @Test
     @DisplayName("Получение всех показаний счетчиков за указанный месяц, если в указанный месяц нет показаний")
     void getAllMeterReadingsByMonthNoReadingsForMonthTest() {
-        when(monthYearValidator.isValid(anyInt(), anyInt())).thenReturn(new ValidatorResult());
-        when(validatorResult.isValid()).thenReturn(true);
         when(meterReadingRepository
                 .findAllByUserId(USER1.getId())).thenReturn(Collections.emptyList());
 
         assertThatThrownBy(() -> {
-            meterReadingService.getAllMeterReadingsByMonth(MONTH, YEAR, USER1.getId());
+            meterReadingService.getAllMeterReadingsByMonth(11, 1990, USER1.getId());
         }).isInstanceOf(NotFoundException.class)
                 .hasMessage("В данном месяце нет показаний");
     }

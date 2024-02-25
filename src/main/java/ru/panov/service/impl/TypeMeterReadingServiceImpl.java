@@ -1,19 +1,17 @@
 package ru.panov.service.impl;
 
+import annotations.Audit;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.panov.annotations.Audit;
+
 import ru.panov.domain.model.TypeMeterReading;
 import ru.panov.domain.requestDTO.TypeMeterReadingRequestDTO;
 import ru.panov.domain.responseDTO.TypeMeterReadingResponseDTO;
 import ru.panov.exception.InputDataConflictException;
 import ru.panov.exception.NotFoundException;
-import ru.panov.exception.ValidationException;
 import ru.panov.mapper.TypeMapper;
 import ru.panov.repository.TypeMeterReadingRepository;
 import ru.panov.service.TypeMeterReadingService;
-import ru.panov.validator.Validator;
-import ru.panov.validator.ValidatorResult;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,21 +25,15 @@ import java.util.Optional;
 public class TypeMeterReadingServiceImpl implements TypeMeterReadingService {
     private final TypeMeterReadingRepository typeMeterReadingRepository;
     private final TypeMapper mapper;
-    private final Validator<TypeMeterReadingRequestDTO> validator;
 
     /**
      * Добавляет новый тип счетчика.
      *
      * @param type информация о новом типе счетчика
-     * @throws ValidationException        если данные о типе счетчика невалидны
      * @throws InputDataConflictException если тип счетчика уже существует
      */
     @Override
     public void addingType(TypeMeterReadingRequestDTO type) {
-        ValidatorResult validatorResult = validator.isValid(type);
-        if (!validatorResult.isValid()) {
-            throw new ValidationException(validatorResult.getErrors().toString());
-        }
         if (getByTitle(type.getTitle()).isPresent()) {
             throw new InputDataConflictException("Такой тип счетчика уже существует");
         }
