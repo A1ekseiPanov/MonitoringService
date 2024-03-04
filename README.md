@@ -23,6 +23,3 @@ Stack: Java 17, Spring Boot 3.2.0, JDBC, Spring Security, Spring Validator, Spri
 -----------------------------
 
 ### [REST API documentation](http://localhost:8080/swagger-ui/index.html)
-
-[ДЗ №3](https://github.com/A1ekseiPanov/MonitoringService/pull/3)
-[ДЗ №4](https://github.com/A1ekseiPanov/MonitoringService/pull/4)
