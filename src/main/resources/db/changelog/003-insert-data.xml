@@ -17,17 +17,17 @@
         </insert>
         <insert schemaName="dbo" tableName="users">
             <column name="username" value="admin"/>
-            <column name="password" value="admin"/>
+            <column name="password" value="$2a$10$HEsPp2SwZnAOW9m.PVjSkep0yfQU8ZcF7sI65LHV7.9na97SXIapW"/>
             <column name="role" value="ADMIN"/>
         </insert>
         <insert schemaName="dbo" tableName="users">
             <column name="username" value="user1"/>
-            <column name="password" value="user1"/>
+            <column name="password" value="$2a$10$GpyHA0hAmcnxO9hKRFU.MOsuQ1iWAqprvVYXuqOdfcX6vJ935oj4W"/>
             <column name="role" value="USER"/>
         </insert>
         <insert schemaName="dbo" tableName="users">
             <column name="username" value="user2"/>
-            <column name="password" value="user2"/>
+            <column name="password" value="$2a$10$8ldAWPlW2kSQgUm3Qc2q9ey70Okxu54mD41ooielCIauvsENKgeQu"/>
             <column name="role" value="USER"/>
         </insert>
         <insert schemaName="dbo" tableName="meter_readings">

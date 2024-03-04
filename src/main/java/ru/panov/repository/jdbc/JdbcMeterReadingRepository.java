@@ -3,11 +3,8 @@ package ru.panov.repository.jdbc;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 import ru.panov.domain.model.MeterReading;
-import ru.panov.domain.model.User;
 import ru.panov.exception.NotFoundException;
 import ru.panov.repository.MeterReadingRepository;
-import ru.panov.repository.TypeMeterReadingRepository;
-import ru.panov.repository.UserRepository;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -21,8 +18,6 @@ import java.util.List;
 @Repository
 public class JdbcMeterReadingRepository implements MeterReadingRepository {
     private final DataSource dataSource;
-    private final UserRepository userRepository;
-    private final TypeMeterReadingRepository typeMeterReadingRepository;
 
     private static final String FIND_ALL_BY_USER_ID = """
             SELECT id,type_id,reading,local_date,user_id FROM dbo.meter_readings WHERE user_id = ?""";
@@ -71,11 +66,10 @@ public class JdbcMeterReadingRepository implements MeterReadingRepository {
         ResultSet resultSet = preparedStatement.executeQuery();
         while (resultSet.next()) {
             meterReadings.add(new MeterReading(resultSet.getLong("id"),
-                    typeMeterReadingRepository.findById(resultSet.getLong("type_id")).get(),
+                    resultSet.getLong("type_id"),
                     resultSet.getBigDecimal("reading"),
                     resultSet.getDate("local_date").toLocalDate(),
-                    userRepository.findById(resultSet.getLong("user_id"))
-                            .orElse(null)));
+                    resultSet.getLong("user_id")));
         }
         return meterReadings;
     }
@@ -90,9 +84,6 @@ public class JdbcMeterReadingRepository implements MeterReadingRepository {
      */
     @Override
     public MeterReading save(MeterReading meterReading, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(
-                        String.format("Пользователь с id:%s не найден", userId)));
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
@@ -100,7 +91,7 @@ public class JdbcMeterReadingRepository implements MeterReadingRepository {
             preparedStatement = connection.prepareStatement(CREATE,
                     Statement.RETURN_GENERATED_KEYS);
             connection.setAutoCommit(false);
-            preparedStatement.setLong(1, meterReading.getType().getId());
+            preparedStatement.setLong(1, meterReading.getTypeId());
             preparedStatement.setBigDecimal(2, meterReading.getReading());
             preparedStatement.setDate(3, Date.valueOf(meterReading.getLocalDate()));
             preparedStatement.setLong(4, userId);
@@ -111,9 +102,6 @@ public class JdbcMeterReadingRepository implements MeterReadingRepository {
                 meterReading.setId(resultSet.getLong("id"));
             }
             connection.commit();
-            meterReading.setUser(user);
-            user.getMeterReadings().add(meterReading);
-            userRepository.update(user.getId(), user);
             return meterReading;
         } catch (Exception e) {
             if (connection != null) {

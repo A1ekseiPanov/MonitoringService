@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    username: test
+    password: test
+    driver-class-name: org.postgresql.Driver
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/changelog.xml
+mybatis:
+  mapper-locations: classpath:db/changelog/*.xml

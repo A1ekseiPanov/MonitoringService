@@ -1,26 +1,25 @@
 package service;
 
 
-import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import ru.panov.domain.requestDTO.UserRequestDTO;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.panov.exception.InputDataConflictException;
 import ru.panov.mapper.UserMapper;
 import ru.panov.repository.UserRepository;
 import ru.panov.service.impl.UserServiceImpl;
-import ru.panov.validator.Validator;
-import ru.panov.validator.ValidatorResult;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 import static util.TestData.USER1;
+import static util.TestData.USER_REQUEST_DTO;
 
 class UserServiceTest {
     @InjectMocks
@@ -28,13 +27,9 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
     @Mock
-    private  UserMapper mapper;
+    private UserMapper mapper;
     @Mock
-    private  HttpSession session;
-    @Mock
-    private Validator<UserRequestDTO> userRegisterValidator;
-    @Mock
-    private ValidatorResult validatorResult;
+    private PasswordEncoder encoder;
 
     @BeforeEach
     void initEach() {
@@ -44,14 +39,10 @@ class UserServiceTest {
     @Test
     @DisplayName("Регистрация пользователя")
     void registerTest() {
-        UserRequestDTO userRequestDTO = new UserRequestDTO(USER1.getUsername(),USER1.getPassword());
+        when(userRepository.findByUsername(USER_REQUEST_DTO.getUsername())).thenReturn(Optional.empty());
+        when(mapper.userDtoToUser(USER_REQUEST_DTO)).thenReturn(USER1);
 
-        when(userRegisterValidator.isValid(userRequestDTO)).thenReturn(new ValidatorResult());
-        when(validatorResult.isValid()).thenReturn(true);
-        when(userRepository.findByUsername(userRequestDTO.getUsername())).thenReturn(Optional.empty());
-        when(mapper.userDtoToUser(userRequestDTO)).thenReturn(USER1);
-
-        assertThatCode(() -> userService.register(userRequestDTO))
+        assertThatCode(() -> userService.register(USER_REQUEST_DTO))
                 .doesNotThrowAnyException();
         verify(userRepository, times(1)).save(USER1);
     }
@@ -59,32 +50,12 @@ class UserServiceTest {
     @Test
     @DisplayName("Регистрация пользователя (пользователь уже существует)")
     void registerUserIsPresentTest() {
-        UserRequestDTO userRequestDTO = new UserRequestDTO(USER1.getUsername(),USER1.getPassword());
-
-        when(userRegisterValidator.isValid(userRequestDTO)).thenReturn(new ValidatorResult());
-        when(validatorResult.isValid()).thenReturn(true);
-        when(userRepository.findByUsername(USER1.getUsername()))
+        when(userRepository.findByUsername(USER_REQUEST_DTO.getUsername()))
                 .thenReturn(Optional.ofNullable(USER1));
 
         assertThatThrownBy(() ->
-            userService.register(userRequestDTO))
+                userService.register(USER_REQUEST_DTO))
                 .isInstanceOf(InputDataConflictException.class)
                 .hasMessage("Такой пользователь уже существует");
     }
-
-    @Test
-    @DisplayName("Вход пользователя")
-    void loginAndLogoutTest() {
-        when(userRepository.findByUsername(USER1.getUsername()))
-                .thenReturn(Optional.ofNullable(USER1));
-
-        userService.login(USER1.getUsername(), USER1.getPassword());
-        when(session.getAttribute("user")).thenReturn(USER1);
-
-        assertThat(session.getAttribute("user")).isEqualTo(USER1);
-        assertThat(session.getAttribute("user")).isNotNull();
-
-    }
-
-
 }
